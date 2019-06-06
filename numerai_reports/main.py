@@ -1,0 +1,41 @@
+import data
+
+
+def all_star_club(lb):
+    "Users who beat benchmark in all active tournaments sorted by mean auroc"
+    df = lb.groupby('username').agg({"pass": "sum", "liveAuroc": "mean"})
+    df = df[df['pass'] == lb['tournament'].nunique()]
+    df = df[['liveAuroc']].rename(columns={'liveAuroc': 'mean_auroc'})
+    df.sort_values('mean_auroc', ascending=False, inplace=True)
+    return df
+
+
+def out_of_n(lb):
+    "Fraction of users that get, e.g., 3/5 in a round"
+    df = lb.groupby(['round_num', 'username'], as_index=False).agg({'pass': 'sum'})
+    df['pass'] = df['pass'].astype(int)
+    means_per_round = df.groupby(["round_num"])['pass'].mean().round(3)
+    df = df.groupby(["round_num", "pass"], as_index=False).count()
+    df = df.pivot("round_num", "pass", "username")
+
+    pass_columns = [i for i in range(lb['tournament'].nunique() +  1)]
+    df.columns = pass_columns
+
+    # number of usrs per round
+    df['N'] = df.sum(axis=1)
+    # average succesful tournaments per user
+    df['mean'] = means_per_round
+    # convert to fractions
+    for col in pass_columns:
+        df[col] /= df['N']
+    # summary row
+    df.loc['mean',:]= df.mean(axis=0)
+    # adjust dtypes
+    df['N'] = df['N'].round().astype(int)
+    return df
+
+
+if __name__ == "__main__":
+    lb = data.fetch_leaderboard(145, 156)
+
+    print(out_of_n(lb))
