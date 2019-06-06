@@ -5,9 +5,9 @@ import data
 
 def all_star_club(lb):
     "Users who beat benchmark in all active tournaments sorted by mean auroc"
-    df = lb.groupby('username').agg({"pass": "sum", "liveAuroc": "mean"})
+    df = lb.groupby('username').agg({"pass": "sum", "live_auroc": "mean"})
     df = df[df['pass'] == lb['tournament'].nunique()]
-    df = df[['liveAuroc']].rename(columns={'liveAuroc': 'mean_auroc'})
+    df = df[['live_auroc']].rename(columns={'live_auroc': 'mean_auroc'})
     df.sort_values('mean_auroc', ascending=False, inplace=True)
     return df
 
@@ -15,7 +15,6 @@ def all_star_club(lb):
 def out_of_n(lb):
     "Fraction of users that get, e.g., 3/5 in a round"
     df = lb.groupby(['round_num', 'username'], as_index=False)['pass'].sum()
-    df['pass'] = df['pass'].astype(int)
     means_per_round = df.groupby(["round_num"])['pass'].mean().round(3)
     df = df.groupby(["round_num", "pass"], as_index=False).count()
     df = df.pivot("round_num", "pass", "username")
@@ -39,7 +38,6 @@ def out_of_n(lb):
 
 def pass_rate(lb):
     df = lb.copy()
-    df['pass'] = df['pass'].astype(int)
     df['has_staked'] = df['stake_value'].notnull()
     df['all'] = df['pass']
     df['stakers'] = df['pass'].where(df['has_staked'], np.nan)
@@ -55,6 +53,8 @@ def pass_rate(lb):
 
 
 if __name__ == "__main__":
-    lb = data.fetch_leaderboard(152, 156)
+    lb = data.fetch_leaderboard(158)
 
     print(out_of_n(lb))
+    print(pass_rate(lb))
+    print(all_star_club(lb))

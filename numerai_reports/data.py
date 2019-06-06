@@ -52,7 +52,8 @@ def fetch_leaderboard(start=0, end=None):
                 round_num, tournament_num))
             dfs.append(df)
     df = pd.concat(dfs, sort=False)
+    df.columns = [utils.to_snake_case(col) for col in df.columns]
 
-    df['pass'] = df['liveAuroc'] > 0.5
+    df['pass'] = (df['live_auroc'] > 0.5).astype(int)
 
     return df
