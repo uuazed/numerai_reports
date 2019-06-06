@@ -1,3 +1,5 @@
+import numpy as np
+
 import data
 
 
@@ -12,13 +14,13 @@ def all_star_club(lb):
 
 def out_of_n(lb):
     "Fraction of users that get, e.g., 3/5 in a round"
-    df = lb.groupby(['round_num', 'username'], as_index=False).agg({'pass': 'sum'})
+    df = lb.groupby(['round_num', 'username'], as_index=False)['pass'].sum()
     df['pass'] = df['pass'].astype(int)
     means_per_round = df.groupby(["round_num"])['pass'].mean().round(3)
     df = df.groupby(["round_num", "pass"], as_index=False).count()
     df = df.pivot("round_num", "pass", "username")
 
-    pass_columns = [i for i in range(lb['tournament'].nunique() +  1)]
+    pass_columns = [i for i in range(lb['tournament'].nunique() + 1)]
     df.columns = pass_columns
 
     # number of usrs per round
@@ -29,13 +31,30 @@ def out_of_n(lb):
     for col in pass_columns:
         df[col] /= df['N']
     # summary row
-    df.loc['mean',:]= df.mean(axis=0)
+    df.loc['mean', :] = df.mean(axis=0)
     # adjust dtypes
     df['N'] = df['N'].round().astype(int)
     return df
 
 
+def pass_rate(lb):
+    df = lb.copy()
+    df['pass'] = df['pass'].astype(int)
+    df['has_staked'] = df['stake_value'].notnull()
+    df['all'] = df['pass']
+    df['stakers'] = df['pass'].where(df['has_staked'], np.nan)
+    df['non_stakers'] = df['pass'].where(~df['has_staked'], np.nan)
+    df['above_cutoff'] = df['pass'].where(
+        df['stake_confidence'] >= df['staking_cutoff'], np.nan)
+    df['below_cutoff'] = df['pass'].where(
+        df['stake_confidence'] < df['staking_cutoff'], np.nan)
+    cols = ['all', 'stakers', 'non_stakers', 'above_cutoff', 'below_cutoff']
+    df = df.groupby('round_num')[cols].mean()
+
+    return df
+
+
 if __name__ == "__main__":
-    lb = data.fetch_leaderboard(145, 156)
+    lb = data.fetch_leaderboard(152, 156)
 
     print(out_of_n(lb))
