@@ -109,8 +109,36 @@ def payments(lb, users):
     return df
 
 
-if __name__ == "__main__":
-    lb = data.fetch_leaderboard(150, 158)
+def dominance(lb, user, kpi="live_auroc", direction='more'):
+    "Fraction of users that `user` beats in terms of 'kpi'."
+    df_user = lb.loc[lb['username'] == user]
+    df_user = df_user[['round_num', 'tournament', kpi]]
+    df_user.rename(columns={kpi: 'user_' + kpi}, inplace=True)
+    df_others = lb.loc[lb['username'] != user]
+    df = df_others.merge(df_user, on=['round_num', 'tournament'], how="left")
 
-    print(reputation(lb, ['uuazed', 'uuazed2', 'uuazed3']))
-    print(payments(lb, 'uuazed2'))
+    if direction == 'more':
+        df['dominated'] = df[kpi] < df['user_' + kpi]
+    elif direction == 'less':
+        df['dominated'] = df[kpi] > df['user_' + kpi]
+    else:
+        raise ValueError(direction)
+    df['dominated'] = df['dominated'].where(df['user_' + kpi].notna(), np.nan)
+    print(df)
+    df = df.groupby(['round_num', 'tournament'])['dominated'].agg(['count', 'sum'])
+    df['frac'] = df['sum'] / df['count']
+    df = df.reset_index().pivot('round_num', 'tournament', 'frac')
+    # summary row & column
+    df.loc[:, 'mean'] = df.mean(axis=1)
+    df.loc['mean', :] = df.mean(axis=0)
+
+    return df
+
+
+if __name__ == "__main__":
+    lb = data.fetch_leaderboard(150, 156)
+
+    #print(reputation(lb, ['uuazed', 'uuazed2', 'uuazed3']))
+    #print(payments(lb, 'uuazed2'))
+
+    print(dominance(lb, "uuazed2", "live_auroc"))

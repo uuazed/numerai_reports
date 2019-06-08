@@ -15,6 +15,7 @@ query = '''
              tournament: $tournament) {
         leaderboard {
           liveAuroc
+          liveLogloss
           username
           validationAuroc
           paymentStaking {
