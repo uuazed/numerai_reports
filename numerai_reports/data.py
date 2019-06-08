@@ -1,3 +1,5 @@
+import decimal
+
 import pandas as pd
 import numerapi
 import tqdm
@@ -15,10 +17,6 @@ query = '''
           liveAuroc
           username
           validationAuroc
-          paymentGeneral {
-            nmrAmount
-            usdAmount
-          }
           paymentStaking {
             nmrAmount
             usdAmount
@@ -26,6 +24,12 @@ query = '''
           stake {
             value
             confidence
+          }
+          return {
+            nmrAmount
+          }
+          stakeResolution {
+            destroyed
           }
         }
       }
@@ -35,6 +39,12 @@ query = '''
 napi = numerapi.NumerAPI(verbosity='warn')
 
 memory = Memory("../.cache", verbose=0)
+
+
+def _parse_float_string(s):
+    if isinstance(s, str):
+        return numerapi.utils.parse_float_string(s)
+    return decimal.Decimal(0)
 
 
 @memory.cache
@@ -54,10 +64,8 @@ def fetch_one(round_num, tournament):
 
 
 def fetch_leaderboard(start=0, end=None):
-
     dfs = []
     rounds = [start] if end is None else range(start, end + 1)
-
     for round_num in tqdm.tqdm(rounds):
         for tournament in napi.get_tournaments(only_active=False):
             res = fetch_one(round_num, tournament)
@@ -67,6 +75,19 @@ def fetch_leaderboard(start=0, end=None):
     df = pd.concat(dfs, sort=False)
     df.columns = [utils.to_snake_case(col) for col in df.columns]
 
-    df['pass'] = (df['live_auroc'] > 0.5).astype(int)
+    df.rename(columns={'payment_staking_nmr_amount': 'nmr_staking',
+                       'payment_staking_usd_amount': 'usd',
+                       'return_nmr_amount': 'nmr_returned',
+                       'stake_value': 'nmr_staked'},
+              inplace=True)
+    df['nmr_staking'] = df['nmr_staking'].apply(_parse_float_string)
+    df['nmr_staked'] = df['nmr_staked'].apply(_parse_float_string)
+    df['usd'] = df['usd'].apply(_parse_float_string)
+    df['pass'] = (df['live_auroc'] > 0.501).astype(int)
+    df['nmr_burned'] = df['nmr_staked'] * df['stake_resolution_destroyed']
+    if 'nmr_returned' in df:
+        df['nmr_returned'] = df['nmr_returned'].apply(_parse_float_string)
+        df['nmr_burned'] -= df['nmr_returned']
 
+    # 5% staking bonus introduced in round 158 included in 'usd' and 'nmr_staking'
     return df
