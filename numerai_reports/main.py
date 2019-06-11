@@ -44,12 +44,15 @@ def pass_rate(lb):
     df['has_staked'] = df['nmr_staked'].notnull()
     df['all'] = df['pass']
     df['stakers'] = df['pass'].where(df['has_staked'], np.nan)
+    df['stakers>0.1'] = df['pass'].where(df['nmr_staked'] > 0.1, np.nan)
+    df['stakers<=0.1'] = df['pass'].where(df['nmr_staked'] <= 0.1, np.nan)
     df['non_stakers'] = df['pass'].where(~df['has_staked'], np.nan)
     df['above_cutoff'] = df['pass'].where(
         df['stake_confidence'] >= df['staking_cutoff'], np.nan)
     df['below_cutoff'] = df['pass'].where(
         df['stake_confidence'] < df['staking_cutoff'], np.nan)
-    cols = ['all', 'stakers', 'non_stakers', 'above_cutoff', 'below_cutoff']
+    cols = ['all', 'stakers', 'stakers>0.1', 'stakers<=0.1', 'non_stakers', 
+            'above_cutoff', 'below_cutoff']
     df = df.groupby('round_num')[cols].mean()
     # summary row
     df.loc['mean', :] = df.mean(axis=0)
