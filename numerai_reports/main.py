@@ -57,6 +57,8 @@ def pass_rate(lb):
 
 
 def reputation(lb, users, window_size=20, fill=0.4):
+    if not isinstance(users, list):
+        users = [users]
     first_round = lb['round_num'].min()
     last_round = lb['round_num'].max()
     res = collections.defaultdict(dict)
@@ -70,7 +72,7 @@ def reputation(lb, users, window_size=20, fill=0.4):
             key += "*"
         for user in users:
             res[user][key] = {}
-            aurocs = subset[subset['username'] == user]['live_auroc'].tolist()
+            aurocs = subset[subset['username'] == user]['live_auroc'].fillna(fill).tolist()
             missing = [fill] * (n_tournaments - len(aurocs))
             aurocs += missing
             reputation = np.mean(aurocs)
@@ -98,7 +100,8 @@ def payments(lb, users):
         reps.append(((bonus, round_num)))
     reps = pd.DataFrame(reps, columns=['nmr_rep_bonus', 'round_num'])
 
-    cols = ['nmr_staked', 'nmr_burned', 'nmr_staking', 'nmr_staking_bonus', 'usd']
+    cols = ['nmr_staked', 'nmr_burned', 'nmr_staking', 'nmr_staking_bonus',
+            'usd_staking_bonus', 'usd_staking']
 
     df = df.groupby('round_num')[cols].sum()
     df = df.merge(reps, how="left", on="round_num")
@@ -106,8 +109,10 @@ def payments(lb, users):
 
     expr = 'nmr_staking - nmr_burned + nmr_rep_bonus + nmr_staking_bonus'
     df['nmr_total'] = df.eval(expr)
+    df['usd_total'] = df.eval("usd_staking + usd_staking_bonus")
     # summary row
     df.loc['total', :] = df.sum(axis=0)
+    df = df.round(2)
     return df
 
 
@@ -154,5 +159,5 @@ def summary(lb):
 
 
 if __name__ == "__main__":
-    lb = data.fetch_leaderboard(158)
-    print(payments(lb, "uuazed2"))
+    lb = data.fetch_leaderboard(120, 159)
+    print(reputation(lb, "anna2"))
