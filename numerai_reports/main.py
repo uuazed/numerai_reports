@@ -124,7 +124,6 @@ def dominance(lb, user, kpi="live_auroc", direction='more'):
     else:
         raise ValueError(direction)
     df['dominated'] = df['dominated'].where(df['user_' + kpi].notna(), np.nan)
-    print(df)
     df = df.groupby(['round_num', 'tournament'])['dominated'].agg(['count', 'sum'])
     df['frac'] = df['sum'] / df['count']
     df = df.reset_index().pivot('round_num', 'tournament', 'frac')
@@ -135,10 +134,24 @@ def dominance(lb, user, kpi="live_auroc", direction='more'):
     return df
 
 
+def summary(lb):
+    print(lb['pass'].value_counts())
+    lb['cutoff'] = lb['staking_cutoff'].astype(float)
+    df = lb.groupby('round_num').agg({'pass': 'mean',
+                                      'username': 'nunique',
+                                      'tournament': 'count',
+                                      'cutoff': 'mean'})
+    df.rename(columns={'pass': 'pass_rate',
+                       'username': 'users',
+                       'tournament': 'submissions'}, inplace=True)
+    df['tourneys/user'] = (df['submissions'] / df['users']).round(2)
+
+    df = df.round(2)
+
+    return df
+
+
 if __name__ == "__main__":
-    lb = data.fetch_leaderboard(150, 156)
+    lb = data.fetch_leaderboard(122, 128)
 
-    #print(reputation(lb, ['uuazed', 'uuazed2', 'uuazed3']))
-    #print(payments(lb, 'uuazed2'))
-
-    print(dominance(lb, "uuazed2", "live_auroc"))
+    print(summary(lb))

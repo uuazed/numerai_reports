@@ -13,6 +13,11 @@ query = '''
           $tournament: Int!) {
       rounds(number: $number
              tournament: $tournament) {
+        benchmark_type
+        selection {
+          bCutoff
+          pCutoff
+        }
         leaderboard {
           liveAuroc
           liveLogloss
@@ -58,8 +63,12 @@ def fetch_one(round_num, tournament):
         df['tournament_num'] = tournament['tournament']
         df['tournament'] = tournament['name']
         df['round_num'] = round_num
-        df['staking_cutoff'] = str(napi.get_staking_cutoff(
-            round_num, tournament['tournament']))
+        df['staking_cutoff'] = raw[0]['selection']['bCutoff']
+        df['benchmark_type'] = raw[0]['benchmark_type']
+        if raw[0]['benchmark_type'] == "auroc":
+            df['staking_cutoff'] = raw[0]['selection']['bCutoff']
+        else:
+            df['staking_cutoff'] = raw[0]['selection']['pCutoff']
         return df
     return None
 
@@ -84,7 +93,13 @@ def fetch_leaderboard(start=0, end=None):
     df['nmr_staking'] = df['nmr_staking'].apply(_parse_float_string)
     df['nmr_staked'] = df['nmr_staked'].apply(_parse_float_string)
     df['usd'] = df['usd'].apply(_parse_float_string)
-    df['pass'] = (df['live_auroc'] > 0.501).astype(int)
+
+    pass_auroc = (df['live_auroc'] > df['staking_cutoff']).astype(int)
+    # FIXME try to get rid of hardcoded threshold
+    pass_ll = (df['live_logloss'] < 0.693).astype(int)
+
+    df['pass'] = pass_auroc.where(df['benchmark_type'] == 'auroc', pass_ll)
+
     df['nmr_burned'] = df['nmr_staked'] * df['stake_resolution_destroyed']
     if 'nmr_returned' in df:
         df['nmr_returned'] = df['nmr_returned'].apply(_parse_float_string)
