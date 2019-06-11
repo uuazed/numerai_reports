@@ -124,7 +124,8 @@ def dominance(lb, user, kpi="live_auroc", direction='more'):
     else:
         raise ValueError(direction)
     df['dominated'] = df['dominated'].where(df['user_' + kpi].notna(), np.nan)
-    df = df.groupby(['round_num', 'tournament'])['dominated'].agg(['count', 'sum'])
+    cols = ['round_num', 'tournament']
+    df = df.groupby(cols)['dominated'].agg(['count', 'sum'])
     df['frac'] = df['sum'] / df['count']
     df = df.reset_index().pivot('round_num', 'tournament', 'frac')
     # summary row & column
@@ -152,6 +153,6 @@ def summary(lb):
 
 
 if __name__ == "__main__":
-    lb = data.fetch_leaderboard(122, 128)
+    lb = data.fetch_leaderboard(122, 130)
 
     print(summary(lb))

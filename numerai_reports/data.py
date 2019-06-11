@@ -58,8 +58,7 @@ def fetch_one(round_num, tournament):
     arguments = {'number': round_num, 'tournament': tournament['tournament']}
     raw = napi.raw_query(query, arguments)['data']['rounds']
     if len(raw) > 0:
-        leaderboard = [utils.flatten(d) for d in raw[0]['leaderboard']]
-        df = pd.DataFrame(leaderboard)
+        df = pd.io.json.json_normalize(raw[0]['leaderboard'], sep='_')
         df['tournament_num'] = tournament['tournament']
         df['tournament'] = tournament['name']
         df['round_num'] = round_num
