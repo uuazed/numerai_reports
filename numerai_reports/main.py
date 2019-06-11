@@ -1,5 +1,4 @@
 import collections
-import decimal
 
 import numpy as np
 import pandas as pd
@@ -86,24 +85,27 @@ def payments(lb, users):
         users = [users]
     df = lb[lb['username'].isin(users)]
 
-    # FIXME we assume everyone gets a staking bonus
+    # FIXME we assume everyone gets the reputation bonus
     reps = []
     for round_num in df['round_num'].unique().tolist():
         if round_num >= 158:
             df_rep = data.fetch_leaderboard(round_num - 19)
             df_rep = df_rep[df_rep['username'].isin(users)]
-            bonus = df_rep['nmr_staked'].sum() * decimal.Decimal('0.5')
+            bonus = df_rep['nmr_staked'].sum() * 0.5
         else:
             df_rep = df[df['round_num'] == round_num]
-            bonus = (df_rep['pass'] * decimal.Decimal('0.1')).sum()
+            bonus = (df_rep['pass'] * 0.1).sum()
         reps.append(((bonus, round_num)))
     reps = pd.DataFrame(reps, columns=['nmr_rep_bonus', 'round_num'])
 
-    cols = ['nmr_staked', 'nmr_burned', 'nmr_staking', 'usd']
+    cols = ['nmr_staked', 'nmr_burned', 'nmr_staking', 'nmr_staking_bonus', 'usd']
+
     df = df.groupby('round_num')[cols].sum()
     df = df.merge(reps, how="left", on="round_num")
     df.set_index("round_num", inplace=True)
-    df['nmr_total'] = df['nmr_staking'] - df['nmr_burned'] + df['nmr_rep_bonus']
+
+    expr = 'nmr_staking - nmr_burned + nmr_rep_bonus + nmr_staking_bonus'
+    df['nmr_total'] = df.eval(expr)
     # summary row
     df.loc['total', :] = df.sum(axis=0)
     return df
@@ -136,7 +138,6 @@ def dominance(lb, user, kpi="live_auroc", direction='more'):
 
 
 def summary(lb):
-    print(lb['pass'].value_counts())
     lb['cutoff'] = lb['staking_cutoff'].astype(float)
     df = lb.groupby('round_num').agg({'pass': 'mean',
                                       'username': 'nunique',
@@ -153,6 +154,5 @@ def summary(lb):
 
 
 if __name__ == "__main__":
-    lb = data.fetch_leaderboard(122, 130)
-
-    print(summary(lb))
+    lb = data.fetch_leaderboard(158)
+    print(payments(lb, "uuazed2"))
