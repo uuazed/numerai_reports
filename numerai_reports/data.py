@@ -70,6 +70,7 @@ def fetch_one(round_num, tournament):
         df['tournament'] = tournament['name']
         df['round_num'] = round_num
         df['nmr_staked'] = df['nmr_staked'].astype(float)
+        df['stake_confidence'] = df['stake_confidence'].astype(float)
         if raw[0]['status'] == "RESOLVED":
             df['staking_cutoff'] = raw[0]['selection']['bCutoff']
             df['benchmark_type'] = raw[0]['benchmark_type']
@@ -88,9 +89,9 @@ def fetch_one(round_num, tournament):
             pass_ll = (df['live_logloss'] < 0.693).astype(int)
             df['pass'] = pass_auroc.where(df['benchmark_type'] == 'auroc', pass_ll)
             df['nmr_burned'] = (df['nmr_staked'] * df['stake_resolution_destroyed']).astype(float)
+
             # partial burns and reputation bonus
             # FIXME when did the staking bonus system start? 158?
-
             if 'nmr_returned' in df:
                 staking_bonus_perc = 0.05
                 bonus_lost = df['nmr_staked'] * staking_bonus_perc

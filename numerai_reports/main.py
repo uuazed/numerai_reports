@@ -41,7 +41,7 @@ def out_of_n(lb):
 
 def pass_rate(lb):
     df = lb.copy()
-    df['has_staked'] = df['stake_value'].notnull()
+    df['has_staked'] = df['nmr_staked'].notnull()
     df['all'] = df['pass']
     df['stakers'] = df['pass'].where(df['has_staked'], np.nan)
     df['non_stakers'] = df['pass'].where(~df['has_staked'], np.nan)
@@ -53,6 +53,8 @@ def pass_rate(lb):
     df = df.groupby('round_num')[cols].mean()
     # summary row
     df.loc['mean', :] = df.mean(axis=0)
+
+    df = df.round(3)
     return df
 
 
@@ -159,5 +161,6 @@ def summary(lb):
 
 
 if __name__ == "__main__":
-    lb = data.fetch_leaderboard(120, 159)
-    print(reputation(lb, "anna2"))
+    lb = data.fetch_leaderboard(120, 158)
+    print(payments(lb, "bps"))
+    print(pass_rate(lb))

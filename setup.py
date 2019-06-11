@@ -30,7 +30,7 @@ if __name__ == "__main__":
         description="Reports for the Numerai machine learning competition",
         long_description=load('README.md'),
         long_description_content_type='text/markdown',
-        url='https://github.com/uuazed/numerai_requests',
+        url='https://github.com/uuazed/numerai_reports',
         platforms="OS Independent",
         classifiers=classifiers,
         license='MIT License',
