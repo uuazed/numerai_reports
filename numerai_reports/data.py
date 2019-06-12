@@ -107,7 +107,7 @@ def fetch_one(round_num, tournament):
                     df['nmr_staking'] -= bonus_nmr_only
                 if round_num > 158:
                     df['nmr_staking_bonus'] = bonus_nmr_only
-                df['nmr_burned'] -= df['nmr_returned']
+                df['nmr_burned'] -= df['nmr_returned'].fillna(0)
 
         return df
     return None
@@ -123,5 +123,6 @@ def fetch_leaderboard(start=0, end=None):
                 dfs.append(res)
 
     df = pd.concat(dfs, sort=False)
+
 
     return df
