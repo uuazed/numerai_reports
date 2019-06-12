@@ -12,3 +12,4 @@ Notable changes to this project.
 - code to fetch numerai leaderboards as pandas DataFrames
 - caching
 - setup testing
+- fixed reputation bonus calculation

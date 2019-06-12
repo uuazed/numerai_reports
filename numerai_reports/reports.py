@@ -71,14 +71,14 @@ def reputation(lb, users, window_size=20, fill=0.4):
     for start in range(first_round, last_round + 1):
         end = min(start + window_size - 1, last_round)
         subset = lb[lb.round_num.between(start, end)]
-        n_tournaments = len(subset.groupby(['tournament', 'round_num']).sum())
+        n_tourneys = len(subset.groupby(['tournament', 'round_num']).sum())
         key = "{}-{}".format(start, end)
         if end - start < window_size - 1:
             key += "*"
         for user in users:
             res[user][key] = {}
             aurocs = subset[subset['username'] == user]['live_auroc'].fillna(fill).tolist()
-            missing = [fill] * (n_tournaments - len(aurocs))
+            missing = [fill] * (n_tourneys - len(aurocs))
             aurocs += missing
             reputation = np.mean(aurocs)
             res[user][key] = reputation
@@ -87,18 +87,36 @@ def reputation(lb, users, window_size=20, fill=0.4):
     return df
 
 
+def _reputation_bonus(round_num, window_size=20, fill=0.4):
+    first_round = round_num - window_size + 1
+    lb = data.fetch_leaderboard(first_round, round_num)
+    n_tourneys = len(lb.groupby(['tournament', 'round_num']).sum())
+    lb['stake'] = lb['nmr_staked'].where(lb['round_num'] == first_round, 0)
+    df = lb.groupby("username").agg(
+        {'live_auroc': ['sum', 'count'], 'stake': 'sum'})
+    df.columns = ['sum', 'count', 'stake']
+    df['mu'] = ((n_tourneys - df['count']) * fill + df['sum']) / n_tourneys
+    df = df[df['stake'] > 0]
+    df.sort_values("mu", inplace=True, ascending=False)
+    df['cumstake'] = df['stake'].cumsum()
+    df = df[df['cumstake'].shift(fill_value=0) < 1000]
+    df['selected'] = np.minimum(
+        df['stake'], 1000 - df['cumstake'].shift(fill_value=0))
+    df['bonus'] = df['selected'] * 0.5
+    return df[['bonus']]
+
+
 def payments(lb, users):
     if not isinstance(users, list):
         users = [users]
     df = lb[lb['username'].isin(users)]
 
-    # FIXME we assume everyone gets the reputation bonus
     reps = []
     for round_num in df['round_num'].unique().tolist():
         if round_num >= 158:
-            df_rep = data.fetch_leaderboard(round_num - 19)
-            df_rep = df_rep[df_rep['username'].isin(users)]
-            bonus = df_rep['nmr_staked'].sum() * 0.5
+            df_rep = _reputation_bonus(round_num)
+            df_rep = df_rep[df_rep.index.isin(users)]
+            bonus = df_rep['bonus'].sum()
         else:
             df_rep = df[df['round_num'] == round_num]
             bonus = (df_rep['pass'] * 0.1).sum()
