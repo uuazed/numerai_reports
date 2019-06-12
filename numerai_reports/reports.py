@@ -70,10 +70,11 @@ def reputation(lb, users, window_size=20, fill=0.4):
 
     for start in range(first_round, last_round + 1):
         end = min(start + window_size - 1, last_round)
-        subset = lb[lb.round_num.between(start, end)]
+        subset = lb[(lb.round_num.between(start, end)) &
+                    (lb['round_status'] == "RESOLVED")]
         n_tourneys = len(subset.groupby(['tournament', 'round_num']).sum())
         key = "{}-{}".format(start, end)
-        if end - start < window_size - 1:
+        if subset['round_num'].nunique() < window_size:
             key += "*"
         for user in users:
             res[user][key] = {}
@@ -182,5 +183,5 @@ def summary(lb):
 
 
 if __name__ == "__main__":
-    lb = data.fetch_leaderboard(156, 159)
+    lb = data.fetch_leaderboard(156, 163)
     print(payments(lb, ['uuazed3']))

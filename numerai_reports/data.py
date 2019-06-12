@@ -73,6 +73,7 @@ def fetch_one(round_num, tournament):
         df['round_num'] = round_num
         df['nmr_staked'] = df['nmr_staked'].astype(float)
         df['stake_confidence'] = df['stake_confidence'].astype(float)
+        df['round_status'] = raw[0]['status']
         if raw[0]['status'] == "RESOLVED":
             df['staking_cutoff'] = raw[0]['selection']['bCutoff']
             df['benchmark_type'] = raw[0]['benchmark_type']
