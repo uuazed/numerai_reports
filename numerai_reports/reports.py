@@ -164,6 +164,5 @@ def summary(lb):
 
 
 if __name__ == "__main__":
-    lb = data.fetch_leaderboard(113, 163)
-    print(payments(lb, ['uuazed', 'uuazed2', 'uuazed3']))
-    print(pass_rate(lb))
+    lb = data.fetch_leaderboard(156, 159)
+    print(payments(lb, ['uuazed3']))

@@ -24,7 +24,9 @@ query = '''
           username
           validationAuroc
           paymentStaking {
-            nmrAmount
+            nmrTransfer {
+              value
+            }
             usdAmount
           }
           stake {
@@ -61,7 +63,7 @@ def fetch_one(round_num, tournament):
     if len(raw) > 0:
         df = pd.io.json.json_normalize(raw[0]['leaderboard'], sep='_')
         df.columns = [utils.to_snake_case(col) for col in df.columns]
-        df.rename(columns={'payment_staking_nmr_amount': 'nmr_staking',
+        df.rename(columns={'payment_staking_nmr_transfer_value': 'nmr_staking',
                            'payment_staking_usd_amount': 'usd_staking',
                            'return_nmr_amount': 'nmr_returned',
                            'stake_value': 'nmr_staked'},
@@ -94,14 +96,17 @@ def fetch_one(round_num, tournament):
             # FIXME when did the staking bonus system start? 158?
             if 'nmr_returned' in df:
                 staking_bonus_perc = 0.05
-                bonus_lost = df['nmr_staked'] * staking_bonus_perc
-                bonus_won = df['nmr_staking'] - df['nmr_staking'] / (1 + staking_bonus_perc)
-                df['nmr_staking_bonus'] = bonus_lost.where(df['usd_staking'].isna(), bonus_won)
-                df['usd_staking_bonus'] = df['usd_staking'] - df['usd_staking'] / (1 + staking_bonus_perc)
-                df['usd_staking'] = df['usd_staking'] - df['usd_staking_bonus']
+                bonus_nmr_only = df['nmr_staked'] * staking_bonus_perc
+                bonus_split = df['nmr_staking'] - df['nmr_staking'] / (1 + staking_bonus_perc)
                 df['nmr_returned'] = df['nmr_returned'].astype(float)
-                df['nmr_returned'] -= bonus_lost
-                df['nmr_staking'] -= bonus_won
+                if round_num == 158:
+                    df['nmr_staking_bonus'] = bonus_nmr_only.where(df['usd_staking'].isna(), bonus_nmr_only)
+                    df['usd_staking_bonus'] = df['usd_staking'] - df['usd_staking'] / (1 + staking_bonus_perc)
+                    df['usd_staking'] = df['usd_staking'] - df['usd_staking_bonus']
+                    df['nmr_returned'] -= bonus_nmr_only
+                    df['nmr_staking'] -= bonus_nmr_only
+                if round_num > 158:
+                    df['nmr_staking_bonus'] = bonus_nmr_only
                 df['nmr_burned'] -= df['nmr_returned']
 
         return df
