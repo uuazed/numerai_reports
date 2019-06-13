@@ -52,14 +52,19 @@ memory = Memory("../.cache", verbose=0)
 
 
 @memory.cache
-def fetch_tournaments():
+def api_fetch_tournaments():
     return napi.get_tournaments(only_active=False)
 
 
 @memory.cache
-def fetch_one(round_num, tournament):
+def api_fetch_leaderboard(round_num, tournament):
     arguments = {'number': round_num, 'tournament': tournament['tournament']}
-    raw = napi.raw_query(query, arguments)['data']['rounds']
+    return napi.raw_query(query, arguments)['data']['rounds']
+
+
+@memory.cache
+def fetch_one(round_num, tournament):
+    raw = api_fetch_leaderboard(round_num, tournament)
     if len(raw) > 0:
         df = pd.io.json.json_normalize(raw[0]['leaderboard'], sep='_')
         df.columns = [utils.to_snake_case(col) for col in df.columns]
@@ -101,13 +106,13 @@ def fetch_one(round_num, tournament):
                 bonus_split = df['nmr_staking'] - df['nmr_staking'] / (1 + staking_bonus_perc)
                 df['nmr_returned'] = df['nmr_returned'].astype(float)
                 if round_num == 158:
-                    df['nmr_staking_bonus'] = bonus_nmr_only.where(df['usd_staking'].isna(), bonus_nmr_only)
-                    df['usd_staking_bonus'] = df['usd_staking'] - df['usd_staking'] / (1 + staking_bonus_perc)
-                    df['usd_staking'] = df['usd_staking'] - df['usd_staking_bonus']
+                    df['nmr_bonus'] = bonus_nmr_only.where(df['usd_staking'].isna(), bonus_nmr_only)
+                    df['usd_bonus'] = df['usd_staking'] - df['usd_staking'] / (1 + staking_bonus_perc)
+                    df['usd_staking'] = df['usd_staking'] - df['usd_bonus']
                     df['nmr_returned'] -= bonus_nmr_only
                     df['nmr_staking'] -= bonus_nmr_only
                 if round_num > 158:
-                    df['nmr_staking_bonus'] = bonus_nmr_only
+                    df['nmr_bonus'] = bonus_nmr_only
                 df['nmr_burned'] -= df['nmr_returned'].fillna(0)
 
         return df
@@ -118,7 +123,7 @@ def fetch_leaderboard(start=0, end=None):
     dfs = []
     rounds = [start] if end is None else range(start, end + 1)
     for round_num in tqdm.tqdm(rounds, desc="fetching leaderboards"):
-        for tournament in fetch_tournaments():
+        for tournament in api_fetch_tournaments():
             res = fetch_one(round_num, tournament)
             if res is not None:
                 dfs.append(res)
