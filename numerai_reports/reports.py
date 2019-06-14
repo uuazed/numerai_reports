@@ -95,14 +95,15 @@ def _reputation_bonus(round_num, window_size=20, fill=0.4):
     lb['stake'] = lb['nmr_staked'].where(lb['round_num'] == first_round, 0)
     df = lb.groupby("username").agg(
         {'live_auroc': ['sum', 'count'], 'stake': 'sum'})
-    df.columns = ['sum', 'count', 'stake']
-    df['mu'] = ((n_tourneys - df['count']) * fill + df['sum']) / n_tourneys
-    df = df[df['stake'] > 0]
+    df.columns = ["_".join(x) for x in df.columns.ravel()]
+    df['mu'] = ((n_tourneys - df['live_auroc_count'])
+                * fill + df['live_auroc_sum']) / n_tourneys
+    df = df[df['stake_sum'] > 0]
     df.sort_values("mu", inplace=True, ascending=False)
-    df['cumstake'] = df['stake'].cumsum()
+    df['cumstake'] = df['stake_sum'].cumsum()
     df = df[df['cumstake'].shift(fill_value=0) < 1000]
     df['selected'] = np.minimum(
-        df['stake'], 1000 - df['cumstake'].shift(fill_value=0))
+        df['stake_sum'], 1000 - df['cumstake'].shift(fill_value=0))
     df['bonus'] = df['selected'] * 0.5
     return df[['bonus']]
 
