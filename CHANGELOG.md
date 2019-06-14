@@ -13,3 +13,6 @@ Notable changes to this project.
 - caching
 - setup testing
 - fixed reputation bonus calculation
+- tests: mock api requests
+- tests: diable caching
+- tests: setup travis & codecov
