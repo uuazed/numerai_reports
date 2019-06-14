@@ -11,7 +11,8 @@ analyze one's model performance. For now, all reports are pure numeric reports.
 
 All information is retrieved via numerai's API and converted to pandas
 DataFrames, to make it easy to work with. This allows to create your own
-reports on top.
+reports on top. `numerai_reports` also caches API results to disk to limit the
+amount of request and to speed-up report generation.
 
 If you encounter a problem or have suggestions, feel free to open an issue.
 

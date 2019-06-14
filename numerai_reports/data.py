@@ -1,10 +1,12 @@
+import os
+
 import pandas as pd
 import numpy as np
 import numerapi
 import tqdm
 from joblib import Memory
 
-import utils
+from numerai_reports import utils
 
 
 query = '''
@@ -48,7 +50,9 @@ query = '''
 
 napi = numerapi.NumerAPI(verbosity='warn')
 
-memory = Memory("../.cache", verbose=0)
+# allow turning off caching, for example during unit tests
+nocache_flag = os.environ.get('NOCACHE', False)
+memory = Memory(None if nocache_flag else "../.cache", verbose=0)
 
 
 @memory.cache

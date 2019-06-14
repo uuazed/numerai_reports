@@ -3,7 +3,7 @@ import collections
 import numpy as np
 import pandas as pd
 
-import data
+from numerai_reports import data
 
 
 def all_star_club(lb):
@@ -180,8 +180,3 @@ def summary(lb):
     df = df.round(2)
 
     return df
-
-
-if __name__ == "__main__":
-    lb = data.fetch_leaderboard(150, 159)
-    print(payments(lb, ['hb']))
