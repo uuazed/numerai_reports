@@ -6,7 +6,7 @@ def load(path):
     return open(path, 'r').read()
 
 
-numerai_reports_version = '0.1.0'
+numerai_reports_version = 'dev'
 
 
 classifiers = [
