@@ -132,8 +132,9 @@ def payments(lb, users):
     df = df.merge(reps, how="left", on="round_num")
     df.set_index("round_num", inplace=True)
 
-    cols = [c for c in df.columns if c.startswith("nmr") and c != "nmr_burned"]
-    df['nmr_total'] = - df['nmr_burned'] + df[cols].sum(axis=1)
+    cols = [c for c in df.columns
+            if c.startswith("nmr") and c != "nmr_burned" and c != "nmr_staked"]
+    df['nmr_total'] = df[cols].sum(axis=1) - df['nmr_burned']
     cols = [c for c in df.columns if c.startswith("usd")]
     df['usd_total'] = df[cols].sum(axis=1)
     # summary row

@@ -16,7 +16,7 @@ amount of request and to speed-up report generation.
 
 If you encounter a problem or have suggestions, feel free to open an issue.
 
-# Installation (TODO)
+# Installation
 `pip install --upgrade numerai_reports`
 
 # Usage

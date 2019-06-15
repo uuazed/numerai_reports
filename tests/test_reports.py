@@ -56,12 +56,12 @@ def test_payments(napi):
     lb = data.fetch_leaderboard(100)
     res = reports.payments(lb, "looser")
     assert res.loc["total"]['nmr_burned'] == 2
-    assert res.loc["total"]['nmr_total'] == 0
+    assert res.loc["total"]['nmr_total'] == -2
     assert res.loc["total"]['usd_total'] == 0
     res = reports.payments(lb, "winner")
     print(res)
     assert res.loc["total"]['nmr_burned'] == 0
-    assert res.loc["total"]['nmr_total'] == 6.66
+    assert res.loc["total"]['nmr_total'] == 0.66
     assert res.loc["total"]['usd_total'] == 2.4
 
 

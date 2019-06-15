@@ -1,6 +1,9 @@
 # Changelog
 Notable changes to this project.
 
+## [dev]
+- fix `payments` calculation
+
 ## [0.1.0] - 2019-06-15
 - added `summary` report
 - added `payments` report
