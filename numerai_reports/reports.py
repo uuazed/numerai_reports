@@ -119,9 +119,12 @@ def payments(lb, users):
             df_rep = _reputation_bonus(round_num)
             df_rep = df_rep[df_rep.index.isin(users)]
             bonus = df_rep['bonus'].sum()
-        else:
+        # FIXME verify start round of 0.1 NMR bonus
+        elif round_num >= 101:
             df_rep = df[df['round_num'] == round_num]
             bonus = (df_rep['pass'] * 0.1).sum()
+        else:
+            bonus = 0
         reps.append(((bonus, round_num)))
     reps = pd.DataFrame(reps, columns=['nmr_rep_bonus', 'round_num'])
 
