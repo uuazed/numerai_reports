@@ -80,8 +80,13 @@ def fetch_one(round_num, tournament):
         df['tournament_num'] = tournament['tournament']
         df['tournament'] = tournament['name']
         df['round_num'] = round_num
-        df['nmr_staked'] = df['nmr_staked'].astype(float)
-        df['stake_confidence'] = df['stake_confidence'].astype(float)
+        if 'nmr_staked' in df:
+            df['nmr_staked'] = df['nmr_staked'].astype(float)
+            df['stake_confidence'] = df['stake_confidence'].astype(float)
+        else:
+            df['nmr_staked'] = np.nan
+            df['stake_confidence'] = np.nan
+            df['stake_resolution_destroyed'] = np.nan
         df['round_status'] = raw[0]['status']
         if raw[0]['status'] == "RESOLVED":
             df['staking_cutoff'] = raw[0]['selection']['bCutoff']
