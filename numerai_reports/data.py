@@ -9,6 +9,49 @@ from joblib import Memory
 from numerai_reports import utils
 
 
+query_old = '''
+    query($number: Int!
+          $tournament: Int!) {
+      rounds(number: $number
+             tournament: $tournament) {
+        benchmark_type
+        status
+        selection {
+          bCutoff
+          pCutoff
+        }
+        leaderboard {
+          liveAuroc
+          liveLogloss
+          username
+          validationAuroc
+          paymentStaking {
+            nmrTransfer {
+              value
+            }
+            usdAmount
+          }
+          paymentGeneral {
+            nmrTransfer {
+              value
+            }
+            usdAmount
+            nmrAmount
+          }
+          stake {
+            value
+            confidence
+          }
+          stakeResolution {
+            destroyed
+            paid
+            successful
+          }
+        }
+      }
+    }
+'''
+
 query = '''
     query($number: Int!
           $tournament: Int!) {
@@ -63,7 +106,9 @@ def api_fetch_tournaments():
 @memory.cache
 def api_fetch_leaderboard(round_num, tournament):
     arguments = {'number': round_num, 'tournament': tournament['tournament']}
-    return napi.raw_query(query, arguments)['data']['rounds']
+    # FIXME
+    q = query if round_num > 100 else query_old
+    return napi.raw_query(q, arguments)['data']['rounds']
 
 
 @memory.cache
@@ -74,6 +119,9 @@ def fetch_one(round_num, tournament):
         df.columns = [utils.to_snake_case(col) for col in df.columns]
         df.rename(columns={'payment_staking_nmr_transfer_value': 'nmr_staking',
                            'payment_staking_usd_amount': 'usd_staking',
+                           'payment_general_nmr_transfer_value': 'nmr_general',
+                           'payment_general_nmr_amount': 'nmr_general_bak',
+                           'payment_general_usd_amount': 'usd_general',
                            'return_nmr_amount': 'nmr_returned',
                            'stake_value': 'nmr_staked'},
                   inplace=True)
@@ -95,6 +143,12 @@ def fetch_one(round_num, tournament):
                 df['nmr_staking'] = df['nmr_staking'].astype(float)
             if 'usd_staking' in df:
                 df['usd_staking'] = df['usd_staking'].astype(float)
+            if 'usd_general' in df:
+                df['usd_general'] = df['usd_general'].astype(float)
+            if 'nmr_general' not in df and 'nmr_general_bak' in df:
+                df['nmr_general'] = df['nmr_general_bak']
+            if 'nmr_general' in df:
+                df['nmr_general'] = df['nmr_general'].astype(float)
             if raw[0]['benchmark_type'] == "auroc":
                 staking_cutoff = raw[0]['selection']['bCutoff']
             else:
