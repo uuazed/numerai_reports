@@ -1,10 +1,11 @@
 # Changelog
 Notable changes to this project.
 
-## [dev]
+## [0.2.0] - 2019-06-26
 - fix `payments` calculation
 - fix crash when fetching old leaderboards
 - set start date for reputation bonus
+- ensure `payments` report works for older rounds as well
 
 ## [0.1.0] - 2019-06-15
 - added `summary` report
