@@ -45,8 +45,8 @@ def napi(monkeypatch):
         mocked_tournaments)
 
 
-def test__reputation_bonus(napi):
-    res = reports._reputation_bonus(100)
+def test_reputation_bonus(napi):
+    res = reports.reputation_bonus(100)
     # staked 1 for 2 tournamences * 50% => 1
     assert res.loc['looser']['bonus'] == 1
     assert res.loc['winner']['bonus'] == 3
@@ -61,7 +61,7 @@ def test_payments(napi):
     res = reports.payments(lb, "winner")
     print(res)
     assert res.loc["total"]['nmr_burned'] == 0
-    assert res.loc["total"]['nmr_total'] == 0.66
+    assert res.loc["total"]['nmr_total'] == 0.46
     assert res.loc["total"]['usd_total'] == 2.4
 
 
