@@ -1,6 +1,9 @@
 # Changelog
 Notable changes to this project.
 
+## [0.2.1] - 2019-06-26
+- added `reputation_bonus` report
+
 ## [0.2.0] - 2019-06-26
 - fix `payments` calculation
 - fix crash when fetching old leaderboards

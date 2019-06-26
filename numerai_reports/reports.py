@@ -88,7 +88,7 @@ def reputation(lb, users, window_size=20, fill=0.4):
     return df
 
 
-def _reputation_bonus(round_num, window_size=20, fill=0.4):
+def reputation_bonus(round_num, window_size=20, fill=0.4):
     first_round = round_num - window_size + 1
     lb = data.fetch_leaderboard(first_round, round_num)
     n_tourneys = len(lb.groupby(['tournament', 'round_num']).sum())
@@ -101,11 +101,13 @@ def _reputation_bonus(round_num, window_size=20, fill=0.4):
     df = df[df['stake_sum'] > 0]
     df.sort_values("mu", inplace=True, ascending=False)
     df['cumstake'] = df['stake_sum'].cumsum()
-    df = df[df['cumstake'].shift(fill_value=0) < 1000]
+    #df = df[df['cumstake'].shift(fill_value=0) < 1000]
     df['selected'] = np.minimum(
-        df['stake_sum'], 1000 - df['cumstake'].shift(fill_value=0))
+        df['stake_sum'],
+        (1000 - df['cumstake'].shift(fill_value=0)).clip(lower=0))
     df['bonus'] = df['selected'] * 0.5
-    return df[['bonus']]
+    df.drop(columns=['live_auroc_sum', 'live_auroc_count'], inplace=True)
+    return df
 
 
 def payments(lb, users):
@@ -116,7 +118,7 @@ def payments(lb, users):
     reps = []
     for round_num in df['round_num'].unique().tolist():
         if round_num >= 158:
-            df_rep = _reputation_bonus(round_num)
+            df_rep = _reputation_bonus(round_num)['bonus']
             df_rep = df_rep[df_rep.index.isin(users)]
             bonus = df_rep['bonus'].sum()
         # FIXME verify start round of 0.1 NMR bonus
