@@ -95,7 +95,7 @@ napi = numerapi.NumerAPI(verbosity='warn')
 
 # allow turning off caching, for example during unit tests
 nocache_flag = os.environ.get('NOCACHE', False)
-memory = Memory(None if nocache_flag else "../.cache", verbose=0)
+memory = Memory(None if nocache_flag else "./cache", verbose=0)
 
 
 @memory.cache

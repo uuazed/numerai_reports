@@ -1,6 +1,9 @@
 # Changelog
 Notable changes to this project.
 
+## [0.2.2] - 2019-06-26
+- create cache directory in current working directory
+
 ## [0.2.1] - 2019-06-26
 - added `reputation_bonus` report
 
