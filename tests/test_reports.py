@@ -62,7 +62,7 @@ def test_payments(napi):
     assert res.loc["total"]['nmr_burned'] == 0
     assert res.loc["total"]['nmr_total'] == 0.46
     assert res.loc["total"]['usd_total'] == 2.4
-    # later round with reputation bónus
+    # later round with reputation bonus
     lb = data.fetch_leaderboard(160)
     # combined report
     res = reports.payments(lb, ['winner', 'looser'])
