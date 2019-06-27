@@ -1,7 +1,7 @@
 # Changelog
 Notable changes to this project.
 
-## [dev]
+## [0.2.3] - 2019-06-27
 - added `friends` report - showing correlation of a user's live auroc to other users
 - fix `payments` report for rounds >= 158
 
