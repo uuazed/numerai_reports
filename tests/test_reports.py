@@ -59,7 +59,6 @@ def test_payments(napi):
     assert res.loc["total"]['nmr_total'] == -2
     assert res.loc["total"]['usd_total'] == 0
     res = reports.payments(lb, "winner")
-    print(res)
     assert res.loc["total"]['nmr_burned'] == 0
     assert res.loc["total"]['nmr_total'] == 0.46
     assert res.loc["total"]['usd_total'] == 2.4

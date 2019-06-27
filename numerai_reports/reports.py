@@ -147,6 +147,21 @@ def payments(lb, users):
     return df
 
 
+def friends(lb, user, metric="live_auroc"):
+    """Correlation of live auroc of each user to a given `user`"""
+    df = lb[['username', 'round_num', metric, 'tournament']]
+    df['round_tournament'] = df['round_num'].astype(str) + df['tournament']
+    df = df.set_index('username')
+    df = df.pivot(columns='round_tournament', values=metric)
+    df = df.dropna()
+    corr = df.T.corr()
+    df = corr.loc[user]
+    df = df.sort_values(ascending=False)
+    df = df.to_frame('mean_correlation')
+    df = df.drop(user, axis=0)
+    return df
+
+
 def dominance(lb, user, kpi="live_auroc", direction='more'):
     "Fraction of users that `user` beats in terms of 'kpi'."
     df_user = lb.loc[lb['username'] == user]

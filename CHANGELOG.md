@@ -1,6 +1,9 @@
 # Changelog
 Notable changes to this project.
 
+## [dev]
+- added `friends` report - showing correlation of a user's live auroc to other users
+
 ## [0.2.2] - 2019-06-26
 - create cache directory in current working directory
 
