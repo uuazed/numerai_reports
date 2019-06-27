@@ -62,6 +62,15 @@ def test_payments(napi):
     assert res.loc["total"]['nmr_burned'] == 0
     assert res.loc["total"]['nmr_total'] == 0.46
     assert res.loc["total"]['usd_total'] == 2.4
+    # later round with reputation bónus
+    lb = data.fetch_leaderboard(160)
+    # combined report
+    res = reports.payments(lb, ['winner', 'looser'])
+    assert res.loc["total"]['nmr_burned'] == 2
+    assert res.loc["total"]['nmr_rep_bonus'] == 4
+    assert res.loc["total"]['nmr_total'] == 2.46
+    assert res.loc["total"]['usd_total'] == 2.4
+
 
 
 def test_dominance(napi):

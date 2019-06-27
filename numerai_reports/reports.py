@@ -118,7 +118,7 @@ def payments(lb, users):
     reps = []
     for round_num in df['round_num'].unique().tolist():
         if round_num >= 158:
-            df_rep = _reputation_bonus(round_num)['bonus']
+            df_rep = reputation_bonus(round_num)
             df_rep = df_rep[df_rep.index.isin(users)]
             bonus = df_rep['bonus'].sum()
         # FIXME verify start round of 0.1 NMR bonus
