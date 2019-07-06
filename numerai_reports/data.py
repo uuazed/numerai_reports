@@ -5,6 +5,7 @@ import numpy as np
 import numerapi
 import tqdm
 from joblib import Memory
+from ratelimit import limits, sleep_and_retry
 
 from numerai_reports import utils
 
@@ -104,6 +105,8 @@ def api_fetch_tournaments():
 
 
 @memory.cache
+@sleep_and_retry
+@limits(calls=3, period=10)
 def api_fetch_leaderboard(round_num, tournament):
     arguments = {'number': round_num, 'tournament': tournament['tournament']}
     # FIXME

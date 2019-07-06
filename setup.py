@@ -36,5 +36,5 @@ if __name__ == "__main__":
         license='MIT License',
         package_data={'numerai_reports': ['LICENSE', 'README.md']},
         packages=find_packages(exclude=['tests']),
-        install_requires=["pandas", "numerapi", "tqdm", "joblib"],
+        install_requires=["pandas", "numerapi", "tqdm", "joblib", "ratelimit"],
         )
