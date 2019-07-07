@@ -45,6 +45,12 @@ def napi(monkeypatch):
         mocked_tournaments)
 
 
+def test_all_star_club(napi):
+    lb = data.fetch_leaderboard(100)
+    res = reports.all_star_club(lb)
+    assert len(res) == 1
+
+
 def test_reputation_bonus(napi):
     res = reports.reputation_bonus(100)
     # staked 1 for 2 tournamences * 50% => 1
@@ -70,7 +76,6 @@ def test_payments(napi):
     assert res.loc["total"]['nmr_rep_bonus'] == 4
     assert res.loc["total"]['nmr_total'] == 2.46
     assert res.loc["total"]['usd_total'] == 2.4
-
 
 
 def test_dominance(napi):

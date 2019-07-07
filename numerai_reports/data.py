@@ -94,6 +94,9 @@ query = '''
 
 napi = numerapi.NumerAPI(verbosity='warn')
 
+# allow turning off rate limiting, for example during unit tests
+noratelimit_flag = os.environ.get('NORATELIMIT', False)
+period = 0 if noratelimit_flag else 30
 # allow turning off caching, for example during unit tests
 nocache_flag = os.environ.get('NOCACHE', False)
 memory = Memory(None if nocache_flag else "./cache", verbose=0)
@@ -106,7 +109,7 @@ def api_fetch_tournaments():
 
 @memory.cache
 @sleep_and_retry
-@limits(calls=3, period=10)
+@limits(calls=10, period=period)
 def api_fetch_leaderboard(round_num, tournament):
     arguments = {'number': round_num, 'tournament': tournament['tournament']}
     # FIXME
