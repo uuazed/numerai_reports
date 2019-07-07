@@ -51,6 +51,12 @@ def test_all_star_club(napi):
     assert len(res) == 1
 
 
+def test_pass_rate(napi):
+    lb = data.fetch_leaderboard(100)
+    res = reports.pass_rate(lb)
+    assert res.loc['mean']['all'] == 0.5
+
+
 def test_reputation_bonus(napi):
     res = reports.reputation_bonus(100)
     # staked 1 for 2 tournamences * 50% => 1
