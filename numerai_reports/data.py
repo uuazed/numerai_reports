@@ -1,4 +1,5 @@
 import os
+import logging
 
 import pandas as pd
 import numpy as np
@@ -8,6 +9,9 @@ from joblib import Memory
 from ratelimit import limits, sleep_and_retry
 
 from numerai_reports import utils
+
+
+logger = logging.getLogger(__name__)
 
 
 query_old = '''
@@ -104,6 +108,7 @@ memory = Memory(None if nocache_flag else "./cache", verbose=0)
 
 @memory.cache
 def api_fetch_tournaments():
+    logger.debug("api fetch tournaments")
     return napi.get_tournaments(only_active=False)
 
 
@@ -111,6 +116,8 @@ def api_fetch_tournaments():
 @sleep_and_retry
 @limits(calls=10, period=period)
 def api_fetch_leaderboard(round_num, tournament):
+    logger.debug("api_fetch_leaderboard {} {}".format(
+        round_num, tournament['tournament']))
     arguments = {'number': round_num, 'tournament': tournament['tournament']}
     # FIXME
     q = query if round_num > 100 else query_old
@@ -119,6 +126,8 @@ def api_fetch_leaderboard(round_num, tournament):
 
 @memory.cache
 def fetch_one(round_num, tournament):
+    logger.debug("fetch_one {} {}".format(round_num, tournament['tournament']))
+    print(round_num, tournament)
     raw = api_fetch_leaderboard(round_num, tournament)
     if len(raw) > 0:
         df = pd.io.json.json_normalize(raw[0]['leaderboard'], sep='_')
