@@ -127,7 +127,6 @@ def api_fetch_leaderboard(round_num, tournament):
 @memory.cache
 def fetch_one(round_num, tournament):
     logger.debug("fetch_one {} {}".format(round_num, tournament['tournament']))
-    print(round_num, tournament)
     raw = api_fetch_leaderboard(round_num, tournament)
     if len(raw) > 0:
         df = pd.io.json.json_normalize(raw[0]['leaderboard'], sep='_')
@@ -178,21 +177,22 @@ def fetch_one(round_num, tournament):
 
             # partial burns and reputation bonus
             # FIXME when did the staking bonus system start? 158?
-            if 'nmr_returned' in df:
+            if round_num >= 158:
                 staking_bonus_perc = 0.05
                 bonus_nmr_only = df['nmr_staked'] * staking_bonus_perc
                 bonus_split = df['nmr_staking'] - df['nmr_staking'] / (1 + staking_bonus_perc)
-                df['nmr_returned'] = df['nmr_returned'].astype(float)
+                if 'nmr_returned' in df:
+                    df['nmr_returned'] = df['nmr_returned'].astype(float)
                 if round_num == 158:
                     df['nmr_bonus'] = bonus_nmr_only.where(df['usd_staking'].isna(), bonus_nmr_only)
                     df['usd_bonus'] = df['usd_staking'] - df['usd_staking'] / (1 + staking_bonus_perc)
                     df['usd_staking'] = df['usd_staking'] - df['usd_bonus']
                     df['nmr_returned'] -= bonus_nmr_only
                     df['nmr_staking'] -= bonus_nmr_only
-                if round_num > 158:
+                else:
                     df['nmr_bonus'] = bonus_nmr_only
-                df['nmr_burned'] -= df['nmr_returned'].fillna(0)
-
+                if 'nmr_returned' in df:
+                    df['nmr_burned'] -= df['nmr_returned'].fillna(0)
         return df
     return None
 

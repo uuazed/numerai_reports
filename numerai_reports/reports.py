@@ -130,8 +130,9 @@ def payments(lb, users):
         reps.append(((bonus, round_num)))
     reps = pd.DataFrame(reps, columns=['nmr_rep_bonus', 'round_num'])
 
-    cols = list({'nmr_staked', 'nmr_burned', 'nmr_staking', 'nmr_bonus', 'nmr_general',
-                 'usd_bonus', 'usd_staking', 'usd_general'} & set(df.columns))
+    cols = list({'nmr_staked', 'nmr_burned', 'nmr_staking', 'nmr_bonus',
+                 'nmr_general', 'usd_bonus', 'usd_staking',
+                 'usd_general'} & set(df.columns))
     df = df.groupby('round_num')[cols].sum()
     df = df.merge(reps, how="left", on="round_num")
     df.set_index("round_num", inplace=True)
