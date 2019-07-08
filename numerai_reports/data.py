@@ -184,7 +184,7 @@ def fetch_one(round_num, tournament):
                 if 'nmr_returned' in df:
                     df['nmr_returned'] = df['nmr_returned'].astype(float)
                 if round_num == 158:
-                    df['nmr_bonus'] = bonus_nmr_only.where(df['usd_staking'].isna(), bonus_nmr_only)
+                    df['nmr_bonus'] = bonus_nmr_only.where(df['usd_staking'].isna(), bonus_split)
                     df['usd_bonus'] = df['usd_staking'] - df['usd_staking'] / (1 + staking_bonus_perc)
                     df['usd_staking'] = df['usd_staking'] - df['usd_bonus']
                     df['nmr_returned'] -= bonus_nmr_only
