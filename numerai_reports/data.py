@@ -200,7 +200,7 @@ def fetch_one(round_num, tournament):
 def fetch_leaderboard(start=0, end=None):
     dfs = []
     rounds = [start] if end is None else range(start, end + 1)
-    for round_num in tqdm.tqdm(rounds, desc="fetching leaderboards"):
+    for round_num in rounds:
         for tournament in api_fetch_tournaments():
             res = fetch_one(round_num, tournament)
             if res is not None:

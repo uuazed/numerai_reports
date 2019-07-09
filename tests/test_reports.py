@@ -2,7 +2,6 @@ import pytest
 import numerapi
 
 from numerai_reports import reports
-from numerai_reports import data
 
 
 @pytest.fixture
@@ -14,7 +13,8 @@ def napi(monkeypatch):
                   'liveLogloss': 0.6931,
                   'stake': {'value': 1, 'confidence': '0.53'},
                   'stakeResolution': {'destroyed': True},
-                  'paymentStaking': None}
+                  'paymentStaking': None,
+                  'return': {'nmrAmount': 0}}
         entry2 = {'username': 'winner',
                   'liveAuroc': 0.512,
                   'liveLogloss': 0.6921,
@@ -46,14 +46,12 @@ def napi(monkeypatch):
 
 
 def test_all_star_club(napi):
-    lb = data.fetch_leaderboard(100)
-    res = reports.all_star_club(lb)
+    res = reports.all_star_club(100)
     assert len(res) == 1
 
 
 def test_pass_rate(napi):
-    lb = data.fetch_leaderboard(100)
-    res = reports.pass_rate(lb)
+    res = reports.pass_rate(100)
     assert res.loc['mean']['all'] == 0.5
 
 
@@ -65,28 +63,25 @@ def test_reputation_bonus(napi):
 
 
 def test_payments(napi):
-    lb = data.fetch_leaderboard(100)
-    res = reports.payments(lb, "looser")
+    res = reports.payments("looser", 100)
     assert res.loc["total"]['nmr_burned'] == 2
     assert res.loc["total"]['nmr_total'] == -2
     assert res.loc["total"]['usd_total'] == 0
-    res = reports.payments(lb, "winner")
+    res = reports.payments("winner", 100)
     assert res.loc["total"]['nmr_burned'] == 0
     assert res.loc["total"]['nmr_total'] == 0.46
     assert res.loc["total"]['usd_total'] == 2.4
     # later round with reputation bonus
-    lb = data.fetch_leaderboard(160)
     # combined report
-    res = reports.payments(lb, ['winner', 'looser'])
+    res = reports.payments(['winner', 'looser'], 160)
     assert res.loc["total"]['nmr_burned'] == 2
     assert res.loc["total"]['nmr_rep_bonus'] == 4
-    assert res.loc["total"]['nmr_total'] == 2.46
+    assert res.loc["total"]['nmr_total'] == 2.86
     assert res.loc["total"]['usd_total'] == 2.4
 
 
 def test_dominance(napi):
-    lb = data.fetch_leaderboard(100)
-    res = reports.dominance(lb, "winner")
+    res = reports.dominance("winner", 100)
     assert res.loc[100]['bernie'] == 1
-    res = reports.dominance(lb, "looser")
+    res = reports.dominance("looser", 100)
     assert res.loc[100]['bernie'] == 0

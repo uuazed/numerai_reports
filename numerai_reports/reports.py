@@ -4,25 +4,33 @@ import numpy as np
 import pandas as pd
 
 from numerai_reports import data
+from numerai_reports import leaderboard
 
 
-def all_star_club(lb):
+lb = leaderboard.Leaderboard()
+
+
+def all_star_club(round_num):
     "Users who beat benchmark in all active tournaments sorted by mean auroc"
-    df = lb.groupby('username').agg({"pass": "sum", "live_auroc": "mean"})
-    df = df[df['pass'] == lb['tournament'].nunique()]
+    df = lb[round_num]
+    num_tournaments = df['tournament'].nunique()
+    df = df.groupby('username').agg({"pass": "sum", "live_auroc": "mean"})
+    df = df[df['pass'] == num_tournaments]
     df = df[['live_auroc']].rename(columns={'live_auroc': 'mean_auroc'})
     df.sort_values('mean_auroc', ascending=False, inplace=True)
     return df
 
 
-def out_of_n(lb):
+def out_of_n(round_start, round_end=None):
     "Fraction of users that get, e.g., 3/5 in a round"
-    df = lb.groupby(['round_num', 'username'], as_index=False)['pass'].sum()
+    df = lb[round_start: round_end]
+    num_tournaments = df['tournament'].nunique()
+    df = df.groupby(['round_num', 'username'], as_index=False)['pass'].sum()
     means_per_round = df.groupby(["round_num"])['pass'].mean().round(3)
     df = df.groupby(["round_num", "pass"], as_index=False).count()
     df = df.pivot("round_num", "pass", "username")
 
-    pass_columns = [i for i in range(lb['tournament'].nunique() + 1)]
+    pass_columns = [i for i in range(num_tournaments + 1)]
     df.columns = pass_columns
 
     # number of usrs per round
@@ -39,8 +47,8 @@ def out_of_n(lb):
     return df
 
 
-def pass_rate(lb):
-    df = lb.copy()
+def pass_rate(round_start, round_end=None):
+    df = lb[round_start: round_end]
     df['has_staked'] = df['nmr_staked'].notnull()
     df['all'] = df['pass']
     df['stakers'] = df['pass'].where(df['has_staked'], np.nan)
@@ -61,17 +69,18 @@ def pass_rate(lb):
     return df
 
 
-def reputation(lb, users, window_size=20, fill=0.4):
+def reputation(users, round_start, round_end=None, window_size=20, fill=0.4):
     if not isinstance(users, list):
         users = [users]
-    first_round = lb['round_num'].min()
-    last_round = lb['round_num'].max()
+    df = lb[round_start:round_end]
+    first_round = df['round_num'].min()
+    last_round = df['round_num'].max()
     res = collections.defaultdict(dict)
 
     for start in range(first_round, last_round + 1):
         end = min(start + window_size - 1, last_round)
-        subset = lb[(lb.round_num.between(start, end)) &
-                    (lb['round_status'] == "RESOLVED")]
+        subset = df[(df.round_num.between(start, end)) &
+                    (df['round_status'] == "RESOLVED")]
         n_tourneys = len(subset.groupby(['tournament', 'round_num']).sum())
         key = "{}-{}".format(start, end)
         if subset['round_num'].nunique() < window_size:
@@ -90,10 +99,10 @@ def reputation(lb, users, window_size=20, fill=0.4):
 
 def reputation_bonus(round_num, window_size=20, fill=0.4):
     first_round = round_num - window_size + 1
-    lb = data.fetch_leaderboard(first_round, round_num)
-    n_tourneys = len(lb.groupby(['tournament', 'round_num']).sum())
-    lb['stake'] = lb['nmr_staked'].where(lb['round_num'] == first_round, 0)
-    df = lb.groupby("username").agg(
+    df = lb[first_round:round_num]
+    n_tourneys = len(df.groupby(['tournament', 'round_num']).sum())
+    df['stake'] = df['nmr_staked'].where(df['round_num'] == first_round, 0)
+    df = df.groupby("username").agg(
         {'live_auroc': ['sum', 'count'], 'stake': 'sum'})
     df.columns = ["_".join(x) for x in df.columns.ravel()]
     df['mu'] = ((n_tourneys - df['live_auroc_count'])
@@ -110,10 +119,11 @@ def reputation_bonus(round_num, window_size=20, fill=0.4):
     return df
 
 
-def payments(lb, users):
+def payments(users, round_start, round_end=None):
     if not isinstance(users, list):
         users = [users]
-    df = lb[lb['username'].isin(users)]
+    df = lb[round_start:round_end]
+    df = df[df['username'].isin(users)]
 
     reps = []
     for round_num in df['round_num'].unique().tolist():
@@ -148,9 +158,10 @@ def payments(lb, users):
     return df
 
 
-def friends(lb, user, metric="live_auroc"):
+def friends(user, round_start, round_end=None, metric="live_auroc"):
     """Correlation of live auroc of each user to a given `user`"""
-    df = lb[['username', 'round_num', metric, 'tournament']]
+    df = lb[round_start: round_end]
+    df = df[['username', 'round_num', metric, 'tournament']]
     df['round_tournament'] = df['round_num'].astype(str) + df['tournament']
     df = df.set_index('username')
     df = df.pivot(columns='round_tournament', values=metric)
@@ -163,12 +174,14 @@ def friends(lb, user, metric="live_auroc"):
     return df
 
 
-def dominance(lb, user, kpi="live_auroc", direction='more'):
-    "Fraction of users that `user` beats in terms of 'kpi'."
-    df_user = lb.loc[lb['username'] == user]
+def dominance(user, round_start, round_end=None,
+              kpi="live_auroc", direction='more'):
+    "Fraction of users that `user` beats in terms of 'kpi'"
+    df = lb[round_start: round_end]
+    df_user = df.loc[df['username'] == user]
     df_user = df_user[['round_num', 'tournament', kpi]]
     df_user.rename(columns={kpi: 'user_' + kpi}, inplace=True)
-    df_others = lb.loc[lb['username'] != user]
+    df_others = df.loc[df['username'] != user]
     df = df_others.merge(df_user, on=['round_num', 'tournament'], how="left")
 
     if direction == 'more':
@@ -189,9 +202,10 @@ def dominance(lb, user, kpi="live_auroc", direction='more'):
     return df
 
 
-def summary(lb):
-    lb['cutoff'] = lb['staking_cutoff'].astype(float)
-    df = lb.groupby('round_num').agg({'pass': 'mean',
+def summary(round_start, round_end=None):
+    df = lb[round_start: round_end]
+    df['cutoff'] = df['staking_cutoff'].astype(float)
+    df = df.groupby('round_num').agg({'pass': 'mean',
                                       'username': 'nunique',
                                       'tournament': 'count',
                                       'cutoff': 'mean'})

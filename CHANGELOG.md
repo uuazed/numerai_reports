@@ -3,6 +3,7 @@ Notable changes to this project.
 
 ## [dev]
 - rate limit requests to the numerai api
+- introduce `Leaderboard` class to abstract leaderboard fetching
 - allow turning of rate limiting
 - test: increase coverage
 
