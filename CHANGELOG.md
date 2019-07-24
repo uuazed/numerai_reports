@@ -2,11 +2,12 @@
 Notable changes to this project.
 
 ## [dev]
+- fix `reputation` report
 - `reputation_bonus` is using correlation_score for rounds >= 164
 - `reputation_bonus` is using weighted averaging for rounds >= 164
 - rate limit requests to the numerai api
 - introduce `Leaderboard` class to abstract leaderboard fetching
-- allow turning of rate limiting
+- allow turning off rate limiting
 - test: increase coverage
 
 ## [0.2.3] - 2019-06-27

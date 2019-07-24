@@ -70,35 +70,7 @@ def pass_rate(round_start, round_end=None):
     return df
 
 
-def reputation(users, round_start, round_end=None, window_size=20, fill=0.4):
-    if not isinstance(users, list):
-        users = [users]
-    df = lb[round_start:round_end]
-    first_round = df['round_num'].min()
-    last_round = df['round_num'].max()
-    res = collections.defaultdict(dict)
-
-    for start in range(first_round, last_round + 1):
-        end = min(start + window_size - 1, last_round)
-        subset = df[(df.round_num.between(start, end)) &
-                    (df['round_status'] == "RESOLVED")]
-        n_tourneys = len(subset.groupby(['tournament', 'round_num']).sum())
-        key = "{}-{}".format(start, end)
-        if subset['round_num'].nunique() < window_size:
-            key += "*"
-        for user in users:
-            res[user][key] = {}
-            aurocs = subset[subset['username'] == user]['live_auroc'].fillna(fill).tolist()
-            missing = [fill] * (n_tourneys - len(aurocs))
-            aurocs += missing
-            reputation = np.mean(aurocs)
-            res[user][key] = reputation
-
-    df = pd.DataFrame(res)
-    return df
-
-
-def reputation_bonus(round_num, window_size=20):
+def _calc_reputation(round_num, window_size=20):
     first_round = round_num - window_size + 1
     df = lb[first_round:round_num]
     df['stake'] = df['nmr_staked'].where(df['round_num'] == first_round, 0)
@@ -127,6 +99,35 @@ def reputation_bonus(round_num, window_size=20):
         # rounds are weighted equally
         df = df.groupby(["username", "round_num"], as_index=False).agg(agg)
         df = df.groupby("username").agg(agg)
+
+    return df
+
+
+def reputation(users, round_start, round_end=None, window_size=20):
+    if not isinstance(users, list):
+        users = [users]
+    if round_end is None:
+        round_end = round_start
+    dfs = []
+
+    for round_num in range(round_start, round_end + 1):
+        df = _calc_reputation(round_num, window_size).reset_index()
+        df = df[df['username'].isin(users)]
+        key = "{}-{}".format(round_num - window_size - 1, round_num)
+        if lb[round_num]["round_status"].iloc[0] != "RESOLVED":
+            key += "*"
+        df["key"] = key
+        del df['stake']
+        dfs.append(df)
+
+    df = pd.concat(dfs)
+    df = df.pivot("key", "username", "mu")
+    return df
+
+
+def reputation_bonus(round_num, window_size=20):
+
+    df = _calc_reputation(round_num, window_size)
 
     df = df[df['stake'] > 0]
     df.sort_values("mu", inplace=True, ascending=False)
