@@ -71,8 +71,10 @@ query = '''
         leaderboard {
           liveAuroc
           liveLogloss
+          liveCorrelation
           username
           validationAuroc
+          validationCorrelation
           paymentStaking {
             nmrTransfer {
               value

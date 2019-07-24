@@ -98,27 +98,35 @@ def reputation(users, round_start, round_end=None, window_size=20, fill=0.4):
     return df
 
 
-def reputation_bonus(round_num, window_size=20, fill=0.4):
+def reputation_bonus(round_num, window_size=20):
     first_round = round_num - window_size + 1
     df = lb[first_round:round_num]
     df['stake'] = df['nmr_staked'].where(df['round_num'] == first_round, 0)
 
-    # fill tournaments user's haven't participated in
     tourneys = df[['round_num', 'tournament']].drop_duplicates()
-    df = df.merge(tourneys, on=["round_num", "tournament"], how="outer")
-    df['live_auroc'].fillna(fill, inplace=True)
+    users = df[['username']].drop_duplicates()
+    tourneys['tmp'] = 1
+    users['tmp'] = 1
+    users_tourneys = users.merge(tourneys, on='tmp')
+    del users_tourneys['tmp']
+    df = users_tourneys.merge(
+        df, on=["round_num", "tournament", "username"], how="left")
+
+    agg = {'stake': "sum", "mu": "mean"}
 
     if round_num < 164:
+        # fill tournaments user's haven't participated in
+        df['mu'] = df['live_auroc'].fillna(0.4)
         # everything is equally weighted
-        df['weight'] = 1
+        df = df.groupby("username").agg(agg)
     else:
-        # rounds are weighted equally, Independent of the number of tourneys
-        df['n_tourneys'] = df.groupby("round_num")['tournament'].transform("nunique")
-        df['weight'] = 1 / df['n_tourneys']
-
-    df['weighted_score'] = df['live_auroc'] * df['weight']
-    df = df.groupby("username")[['weighted_score', 'stake']].sum()
-    df['mu'] = df['weighted_score'] / window_size
+        # fill tournaments user's haven't participated in
+        # use correlation score
+        df['mu'] = df['live_correlation'].fillna(df['live_auroc'] - 0.5)
+        df['mu'] = df['mu'].fillna(-0.1)
+        # rounds are weighted equally
+        df = df.groupby(["username", "round_num"], as_index=False).agg(agg)
+        df = df.groupby("username").agg(agg)
 
     df = df[df['stake'] > 0]
     df.sort_values("mu", inplace=True, ascending=False)
@@ -127,7 +135,6 @@ def reputation_bonus(round_num, window_size=20, fill=0.4):
         df['stake'],
         (1000 - df['cumstake'].shift(fill_value=0)).clip(lower=0))
     df['bonus'] = df['selected'] * 0.5
-    df.drop(columns=['weighted_score'], inplace=True)
     return df
 
 
