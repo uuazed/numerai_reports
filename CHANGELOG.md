@@ -1,7 +1,7 @@
 # Changelog
 Notable changes to this project.
 
-## [dev]
+## [0.3.0] - 2019-07-24
 - fix `reputation` report
 - `reputation_bonus` is using correlation_score for rounds >= 164
 - `reputation_bonus` is using weighted averaging for rounds >= 164
