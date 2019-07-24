@@ -1,10 +1,11 @@
+from __future__ import division
+
 import collections
 
 import numpy as np
 import pandas as pd
 
-from numerai_reports import data
-from numerai_reports import leaderboard
+import leaderboard
 
 
 lb = leaderboard.Leaderboard()
@@ -100,22 +101,33 @@ def reputation(users, round_start, round_end=None, window_size=20, fill=0.4):
 def reputation_bonus(round_num, window_size=20, fill=0.4):
     first_round = round_num - window_size + 1
     df = lb[first_round:round_num]
-    n_tourneys = len(df.groupby(['tournament', 'round_num']).sum())
     df['stake'] = df['nmr_staked'].where(df['round_num'] == first_round, 0)
-    df = df.groupby("username").agg(
-        {'live_auroc': ['sum', 'count'], 'stake': 'sum'})
-    df.columns = ["_".join(x) for x in df.columns.ravel()]
-    df['mu'] = ((n_tourneys - df['live_auroc_count'])
-                * fill + df['live_auroc_sum']) / n_tourneys
-    df = df[df['stake_sum'] > 0]
+
+    # fill tournaments user's haven't participated in
+    tourneys = df[['round_num', 'tournament']].drop_duplicates()
+    df = df.merge(tourneys, on=["round_num", "tournament"], how="outer")
+    df['live_auroc'].fillna(fill, inplace=True)
+
+    if round_num < 164:
+        # everything is equally weighted
+        df['weight'] = 1
+    else:
+        # rounds are weighted equally, Independent of the number of tourneys
+        df['n_tourneys'] = df.groupby("round_num")['tournament'].transform("nunique")
+        df['weight'] = 1 / df['n_tourneys']
+
+    df['weighted_score'] = df['live_auroc'] * df['weight']
+    df = df.groupby("username")[['weighted_score', 'stake']].sum()
+    df['mu'] = df['weighted_score'] / window_size
+
+    df = df[df['stake'] > 0]
     df.sort_values("mu", inplace=True, ascending=False)
-    df['cumstake'] = df['stake_sum'].cumsum()
-    #df = df[df['cumstake'].shift(fill_value=0) < 1000]
+    df['cumstake'] = df['stake'].cumsum()
     df['selected'] = np.minimum(
-        df['stake_sum'],
+        df['stake'],
         (1000 - df['cumstake'].shift(fill_value=0)).clip(lower=0))
     df['bonus'] = df['selected'] * 0.5
-    df.drop(columns=['live_auroc_sum', 'live_auroc_count'], inplace=True)
+    df.drop(columns=['weighted_score'], inplace=True)
     return df
 
 
