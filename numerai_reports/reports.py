@@ -94,7 +94,11 @@ def _calc_reputation(round_num, window_size=20):
     else:
         # fill tournaments user's haven't participated in
         # use correlation score
-        df['mu'] = df['live_correlation'].fillna(df['live_auroc'] - 0.5)
+        # use auc-0.5 for rounds before 168
+        df["mu"] = np.where(
+            df['round_num'] >= 168,
+            df['live_correlation'],
+            df['live_auroc'] - 0.5)
         df['mu'] = df['mu'].fillna(-0.1)
         # rounds are weighted equally
         df = df.groupby(["username", "round_num"], as_index=False).agg(agg)

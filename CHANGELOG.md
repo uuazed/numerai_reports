@@ -1,6 +1,9 @@
 # Changelog
 Notable changes to this project.
 
+## [0.3.1] - 2019-07-24
+- fix `reputation` calculation
+
 ## [0.3.0] - 2019-07-24
 - fix `reputation` report
 - `reputation_bonus` is using correlation_score for rounds >= 164
