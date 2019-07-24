@@ -21,7 +21,7 @@ class Leaderboard:
                 step = 1 if given.step is None else given.step
                 df = pd.concat(
                     [self._get(i) for i
-                     in range(given.start, given.stop, step)], sort=False)
+                     in range(given.start, given.stop + 1, step)], sort=False)
         else:
             df = self._get(given)
 

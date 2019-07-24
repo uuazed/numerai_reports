@@ -149,7 +149,9 @@ def payments(users, round_start, round_end=None):
 
     cols = [c for c in df.columns
             if c.startswith("nmr") and c != "nmr_burned" and c != "nmr_staked"]
-    df['nmr_total'] = df[cols].sum(axis=1) - df['nmr_burned']
+    df['nmr_total'] = df[cols].sum(axis=1)
+    if 'nmr_burned' in df:
+        df['nmr_total'] -= df['nmr_burned']
     cols = [c for c in df.columns if c.startswith("usd")]
     df['usd_total'] = df[cols].sum(axis=1)
     # summary row

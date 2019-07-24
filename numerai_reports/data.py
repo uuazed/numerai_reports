@@ -163,6 +163,8 @@ def fetch_one(round_num, tournament):
                 df['nmr_general'] = df['nmr_general_bak']
             if 'nmr_general' in df:
                 df['nmr_general'] = df['nmr_general'].astype(float)
+            if 'nmr_returned' in df:
+                df['nmr_returned'] = df['nmr_returned'].astype(float)
             if raw[0]['benchmark_type'] == "auroc":
                 staking_cutoff = raw[0]['selection']['bCutoff']
             else:
@@ -175,38 +177,34 @@ def fetch_one(round_num, tournament):
             df['pass'] = pass_auroc.where(df['benchmark_type'] == 'auroc', pass_ll)
             df['nmr_burned'] = (df['nmr_staked'] * df['stake_resolution_destroyed']).astype(float)
 
-            # partial burns and reputation bonus
-            # FIXME when did the staking bonus system start? 158?
-            if round_num >= 158:
+            # staking bonus
+            if round_num >= 154:
                 staking_bonus_perc = 0.05
                 bonus_nmr_only = df['nmr_staked'] * staking_bonus_perc
                 bonus_split = df['nmr_staking'] - df['nmr_staking'] / (1 + staking_bonus_perc)
-                if 'nmr_returned' in df:
-                    df['nmr_returned'] = df['nmr_returned'].astype(float)
                 if round_num == 158:
                     df['nmr_bonus'] = bonus_nmr_only.where(df['usd_staking'].isna(), bonus_split)
                     df['usd_bonus'] = df['usd_staking'] - df['usd_staking'] / (1 + staking_bonus_perc)
                     df['usd_staking'] = df['usd_staking'] - df['usd_bonus']
-                    df['nmr_returned'] -= bonus_nmr_only
-                    df['nmr_staking'] -= bonus_nmr_only
+                    df['nmr_staking'] -= df['nmr_bonus']
+                    df['nmr_returned'] -= df['nmr_bonus']
                 else:
                     df['nmr_bonus'] = bonus_nmr_only
-                if 'nmr_returned' in df:
-                    df['nmr_burned'] -= df['nmr_returned'].fillna(0)
+
+            # partial burns
+            if round_num >= 154 and 'nmr_returned' in df:
+                df['nmr_burned'] -= df['nmr_returned'].fillna(0)
+
         return df
     return None
 
 
-def fetch_leaderboard(start=0, end=None):
+def fetch_leaderboard(round_num):
     dfs = []
-    rounds = [start] if end is None else range(start, end + 1)
-    for round_num in rounds:
-        for tournament in api_fetch_tournaments():
-            res = fetch_one(round_num, tournament)
-            if res is not None:
-                dfs.append(res)
+    for tournament in api_fetch_tournaments():
+        res = fetch_one(round_num, tournament)
+        if res is not None:
+            dfs.append(res)
 
     df = pd.concat(dfs, sort=False)
-
-
     return df
