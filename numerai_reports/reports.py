@@ -5,7 +5,7 @@ import collections
 import numpy as np
 import pandas as pd
 
-import leaderboard
+from numerai_reports import leaderboard
 
 
 lb = leaderboard.Leaderboard()

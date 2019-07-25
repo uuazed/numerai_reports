@@ -1,6 +1,6 @@
 import pandas as pd
 
-import data
+from numerai_reports import data
 
 
 class Leaderboard:

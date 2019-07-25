@@ -8,7 +8,7 @@ import tqdm
 from joblib import Memory
 from ratelimit import limits, sleep_and_retry
 
-import utils
+from numerai_reports import utils
 
 
 logger = logging.getLogger(__name__)

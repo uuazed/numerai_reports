@@ -1,6 +1,9 @@
 # Changelog
 Notable changes to this project.
 
+## [dev]
+- fix import problems
+
 ## [0.3.1] - 2019-07-24
 - fix `reputation` calculation
 
