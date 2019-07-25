@@ -29,10 +29,9 @@ line (TODO).
 
 Usage example:
 
-    from numerai_reports import data, reports
-    lb = data.fetch_leaderboard(150, 159)
-    print(reports.payments(lb, "slyfox"))
-    print(reports.reputation(lb, "slyfox"))
-    print(reports.pass_rate(lb))
-    print(reports.out_of_n(lb))
-    print(reports.dominance("uuazed"))
+    from numerai_reports import reports
+    print(reports.payments("slyfox", 160, 165))
+    print(reports.reputation("slyfox", 160, 165))
+    print(reports.pass_rate(160, 165))
+    print(reports.out_of_n(160, 165))
+    print(reports.dominance("uuazed", 160, 165))
