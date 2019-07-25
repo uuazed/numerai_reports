@@ -1,7 +1,7 @@
 # Changelog
 Notable changes to this project.
 
-## [dev]
+## [0.3.2] - 2019-07-25
 - fix import problems
 
 ## [0.3.1] - 2019-07-24
