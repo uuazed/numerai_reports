@@ -1,6 +1,11 @@
 # Changelog
 Notable changes to this project.
 
+## [dev]
+- `reputation` report gained a `rank` option, that allows showing the
+  leaderboard position instead of raw reputation score
+- update example code
+
 ## [0.3.2] - 2019-07-25
 - fix import problems
 

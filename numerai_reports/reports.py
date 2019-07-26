@@ -107,7 +107,7 @@ def _calc_reputation(round_num, window_size=20):
     return df
 
 
-def reputation(users, round_start, round_end=None, window_size=20):
+def reputation(users, round_start, round_end=None, window_size=20, rank=False):
     if not isinstance(users, list):
         users = [users]
     if round_end is None:
@@ -116,8 +116,10 @@ def reputation(users, round_start, round_end=None, window_size=20):
 
     for round_num in range(round_start, round_end + 1):
         df = _calc_reputation(round_num, window_size).reset_index()
+        if rank:
+            df['mu'] = df['mu'].rank(ascending=False).astype(int)
         df = df[df['username'].isin(users)]
-        key = "{}-{}".format(round_num - window_size - 1, round_num)
+        key = "{}-{}".format(round_num - window_size + 1, round_num)
         if lb[round_num]["round_status"].iloc[0] != "RESOLVED":
             key += "*"
         df["key"] = key
