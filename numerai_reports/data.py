@@ -5,7 +5,6 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 import numerapi
-import tqdm
 from joblib import Memory
 from ratelimit import limits, sleep_and_retry
 

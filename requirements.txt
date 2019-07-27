@@ -1,5 +1,4 @@
 pandas
 numerapi
-tqdm
 joblib
 ratelimit
