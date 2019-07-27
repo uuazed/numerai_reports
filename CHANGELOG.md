@@ -4,7 +4,11 @@ Notable changes to this project.
 ## [dev]
 - `reputation` report gained a `rank` option, that allows showing the
   leaderboard position instead of raw reputation score
+- only try fetching rounds/tournaments that actually exist to reduce load
+  on numerai's backend
+- ensure cached leaderboards are invalidated when their status changes
 - update example code
+- update tests
 
 ## [0.3.2] - 2019-07-25
 - fix import problems

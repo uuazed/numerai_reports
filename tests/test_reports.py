@@ -7,7 +7,7 @@ from numerai_reports import reports
 @pytest.fixture
 def napi(monkeypatch):
 
-    def mocked_api(*arg, **kwargs):
+    def mocked_api(napi, query, *args, **kwargs):
         entry1 = {'username': 'looser',
                   'liveAuroc': 0.500,
                   'liveLogloss': 0.6931,
@@ -22,27 +22,24 @@ def napi(monkeypatch):
                   'stakeResolution': {'destroyed': False},
                   'paymentStaking': {'nmrTransfer': {'value': '0.23'},
                                      'usdAmount': '1.2'}}
-        return {"data": {"rounds": [
-            {'status': 'RESOLVED',
-             'benchmark_type': 'auroc',
-             'selection': {'bCutoff': '0.501'},
-             'leaderboard': [
-                entry1, entry2]}
-            ]}}
+        rounds = {'data': {'tournaments': [{'active': True,
+                                            'tournament': 1,
+                                            'name': 'bernie',
+                                            'rounds': [
+                                              {'status': "RESOLVED",
+                                               'number': i}
+                                              for i in range(60, 166)]}]}}
 
-    def mocked_tournaments(*args, **kwargs):
-        return [{'active': True,
-                 'name': 'bernie',
-                 'tournament': 1},
-                {'active': False,
-                 'name': 'ken',
-                 'tournament': 4}
-                ]
+        if "leaderboard" in query:
+            return {"data": {"rounds": [
+                   {'status': 'RESOLVED',
+                    'benchmark_type': 'auroc',
+                    'selection': {'bCutoff': '0.501'},
+                    'leaderboard': [entry1, entry2]}]}}
+        else:
+            return rounds
 
     monkeypatch.setattr(numerapi.numerapi.NumerAPI, "raw_query", mocked_api)
-    monkeypatch.setattr(
-        numerapi.numerapi.NumerAPI, "get_tournaments",
-        mocked_tournaments)
 
 
 def test_all_star_club(napi):
@@ -57,27 +54,27 @@ def test_pass_rate(napi):
 
 def test_reputation_bonus(napi):
     res = reports.reputation_bonus(100)
-    # staked 1 for 2 tournamences * 50% => 1
-    assert res.loc['looser']['bonus'] == 1
-    assert res.loc['winner']['bonus'] == 3
+    # staked 1 for 1 tournamenc * 50% => 0.5
+    assert res.loc['looser']['bonus'] == 0.5
+    assert res.loc['winner']['bonus'] == 1.5
 
 
 def test_payments(napi):
     res = reports.payments("looser", 100)
-    assert res.loc["total"]['nmr_burned'] == 2
-    assert res.loc["total"]['nmr_total'] == -2
+    assert res.loc["total"]['nmr_burned'] == 1
+    assert res.loc["total"]['nmr_total'] == -1
     assert res.loc["total"]['usd_total'] == 0
     res = reports.payments("winner", 100)
     assert res.loc["total"]['nmr_burned'] == 0
-    assert res.loc["total"]['nmr_total'] == 0.46
-    assert res.loc["total"]['usd_total'] == 2.4
+    assert res.loc["total"]['nmr_total'] == 0.23
+    assert res.loc["total"]['usd_total'] == 1.2
     # later round with reputation bonus
     # combined report
     res = reports.payments(['winner', 'looser'], 160)
-    assert res.loc["total"]['nmr_burned'] == 2
-    assert res.loc["total"]['nmr_rep_bonus'] == 4
-    assert res.loc["total"]['nmr_total'] == 2.86
-    assert res.loc["total"]['usd_total'] == 2.4
+    assert res.loc["total"]['nmr_burned'] == 1
+    assert res.loc["total"]['nmr_rep_bonus'] == 2
+    assert res.loc["total"]['nmr_total'] == 1.43
+    assert res.loc["total"]['usd_total'] == 1.2
 
 
 def test_dominance(napi):

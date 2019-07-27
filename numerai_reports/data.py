@@ -1,5 +1,6 @@
 import os
 import logging
+from collections import defaultdict
 
 import pandas as pd
 import numpy as np
@@ -108,28 +109,52 @@ nocache_flag = os.environ.get('NOCACHE', False)
 memory = Memory(None if nocache_flag else "./cache", verbose=0)
 
 
-@memory.cache
-def api_fetch_tournaments():
-    logger.debug("api fetch tournaments")
-    return napi.get_tournaments(only_active=False)
+@utils.memoize
+def api_fetch_rounds():
+    q = """
+      query {
+        tournaments {
+          active
+          tournament
+          name
+          rounds {
+            number
+            status
+          }
+        }
+      }
+    """
+    raw = napi.raw_query(q)['data']['tournaments']
+
+    rounds = defaultdict(list)
+    for tournament in raw:
+        t_num = tournament['tournament']
+        t_name = tournament['name']
+        for r in tournament["rounds"]:
+            rounds[r['number']].append((t_name, t_num, r['status']))
+    return rounds
 
 
 @memory.cache
 @sleep_and_retry
 @limits(calls=10, period=period)
-def api_fetch_leaderboard(round_num, tournament):
+def api_fetch_leaderboard(round_num, tournament_num):
     logger.debug("api_fetch_leaderboard {} {}".format(
-        round_num, tournament['tournament']))
-    arguments = {'number': round_num, 'tournament': tournament['tournament']}
+        round_num, tournament_num))
+    arguments = {'number': round_num, 'tournament': tournament_num}
     # FIXME
     q = query if round_num > 100 else query_old
     return napi.raw_query(q, arguments)['data']['rounds']
 
 
 @memory.cache
-def fetch_one(round_num, tournament):
-    logger.debug("fetch_one {} {}".format(round_num, tournament['tournament']))
-    raw = api_fetch_leaderboard(round_num, tournament)
+def fetch_one(round_num, tournament_num, tournament_name, status):
+    """
+    `status` isn't used anywhere, but by passing it we ensure that new data is
+    fetched every time the round status changes
+    """
+    logger.debug("fetch_one {} {}".format(round_num, tournament_num))
+    raw = api_fetch_leaderboard(round_num, tournament_num)
     if len(raw) > 0:
         df = pd.io.json.json_normalize(raw[0]['leaderboard'], sep='_')
         df.columns = [utils.to_snake_case(col) for col in df.columns]
@@ -141,8 +166,8 @@ def fetch_one(round_num, tournament):
                            'return_nmr_amount': 'nmr_returned',
                            'stake_value': 'nmr_staked'},
                   inplace=True)
-        df['tournament_num'] = tournament['tournament']
-        df['tournament'] = tournament['name']
+        df['tournament_num'] = tournament_num
+        df['tournament'] = tournament_name
         df['round_num'] = round_num
         if 'nmr_staked' in df:
             df['nmr_staked'] = df['nmr_staked'].astype(float)
@@ -203,8 +228,11 @@ def fetch_one(round_num, tournament):
 
 def fetch_leaderboard(round_num):
     dfs = []
-    for tournament in api_fetch_tournaments():
-        res = fetch_one(round_num, tournament)
+    rounds = api_fetch_rounds()
+    if round_num not in rounds:
+        raise ValueError("no such round")
+    for name, num, status in rounds[round_num]:
+        res = fetch_one(round_num, num, name, status)
         if res is not None:
             dfs.append(res)
 
