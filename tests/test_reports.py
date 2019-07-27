@@ -103,6 +103,11 @@ def test_payments(napi):
     assert res.loc["total"]['usd_total'] == 1.2
 
 
+def test_out_of_n(napi):
+    res = reports.out_of_n(100, 101)
+    assert res.loc['mean'].tolist() == [0.5, 0.5, 2, 1.0]
+
+
 def test_dominance(napi):
     res = reports.dominance("winner", 100)
     assert res.loc[100]['bernie'] == 1

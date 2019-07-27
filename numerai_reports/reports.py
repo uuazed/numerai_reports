@@ -24,22 +24,22 @@ def all_star_club(round_num):
 
 def out_of_n(round_start, round_end=None):
     "Fraction of users that get, e.g., 3/5 in a round"
-    df = lb[round_start: round_end]
+    df = lb[round_start:round_end]
     num_tournaments = df['tournament'].nunique()
     df = df.groupby(['round_num', 'username'], as_index=False)['pass'].sum()
     means_per_round = df.groupby(["round_num"])['pass'].mean().round(3)
     df = df.groupby(["round_num", "pass"], as_index=False).count()
     df = df.pivot("round_num", "pass", "username")
 
-    pass_columns = [i for i in range(num_tournaments + 1)]
-    df.columns = pass_columns
-
+    # remove columns 'name'
+    cols = df.columns.values
+    df.columns = cols
     # number of usrs per round
     df['N'] = df.sum(axis=1)
     # average succesful tournaments per user
     df['mean'] = means_per_round
     # convert to fractions
-    for col in pass_columns:
+    for col in cols:
         df[col] /= df['N']
     # summary row
     df.loc['mean', :] = df.mean(axis=0)
