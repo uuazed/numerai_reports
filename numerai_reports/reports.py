@@ -188,6 +188,8 @@ def payments(users, round_start, round_end=None):
 
 def friends(user, round_start, round_end=None, metric="live_auroc"):
     """Correlation of live auroc of each user to a given `user`"""
+    # FIXME auto select metric
+    assert isinstance(user, str)
     df = lb[round_start: round_end]
     df = df[['username', 'round_num', metric, 'tournament']]
     df['round_tournament'] = df['round_num'].astype(str) + df['tournament']
