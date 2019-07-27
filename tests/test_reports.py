@@ -113,3 +113,10 @@ def test_dominance(napi):
     assert res.loc[100]['bernie'] == 1
     res = reports.dominance("loser", 100)
     assert res.loc[100]['bernie'] == 0
+
+
+def test_reputation(napi):
+    res = reports.reputation(['loser', 'winner'], 140, 150)
+
+    assert res.loc['121-140'].round(3).tolist() == [0.491, 0.514]
+    assert res.loc['131-150'].round(3).tolist() == [0.500, 0.512]

@@ -1,6 +1,9 @@
 # Changelog
 Notable changes to this project.
 
+## [dev]
+- increase test coverage to >90%
+
 ## [0.3.3 - 2019-07-27]
 - `reputation` report gained a `rank` option, that allows showing the
   leaderboard position instead of raw reputation score
