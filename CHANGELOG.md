@@ -1,13 +1,13 @@
 # Changelog
 Notable changes to this project.
 
-## [dev]
+## [0.3.3 - 2019-07-27]
 - `reputation` report gained a `rank` option, that allows showing the
   leaderboard position instead of raw reputation score
 - only try fetching rounds/tournaments that actually exist to reduce load
   on numerai's backend
 - ensure cached leaderboards are invalidated when their status changes
-- notify about leaderboard fetches, to avoid the app to appear as hanging.. 
+- notify about leaderboard fetches, to avoid the app to appear as hanging..
 - update example code
 - update tests
 
