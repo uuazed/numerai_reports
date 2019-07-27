@@ -12,7 +12,10 @@ from ratelimit import limits, sleep_and_retry
 from numerai_reports import utils
 
 
+logging.basicConfig()
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 query_old = '''
@@ -153,7 +156,8 @@ def fetch_one(round_num, tournament_num, tournament_name, status):
     `status` isn't used anywhere, but by passing it we ensure that new data is
     fetched every time the round status changes
     """
-    logger.debug("fetch_one {} {}".format(round_num, tournament_num))
+    logger.info("fetch leaderboard round {} tournament {}".format(
+        round_num, tournament_num))
     raw = api_fetch_leaderboard(round_num, tournament_num)
     if len(raw) > 0:
         df = pd.io.json.json_normalize(raw[0]['leaderboard'], sep='_')

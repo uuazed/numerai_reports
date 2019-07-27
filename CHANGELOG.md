@@ -7,6 +7,7 @@ Notable changes to this project.
 - only try fetching rounds/tournaments that actually exist to reduce load
   on numerai's backend
 - ensure cached leaderboards are invalidated when their status changes
+- notify about leaderboard fetches, to avoid the app to appear as hanging.. 
 - update example code
 - update tests
 
