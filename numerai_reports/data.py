@@ -9,12 +9,7 @@ from joblib import Memory
 from ratelimit import limits, sleep_and_retry
 
 from numerai_reports import utils
-
-
-logging.basicConfig()
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from numerai_reports.settings import changes
 
 
 query_old = '''
@@ -102,6 +97,7 @@ query = '''
 '''
 
 napi = numerapi.NumerAPI(verbosity='warn')
+logger = logging.getLogger(__name__)
 
 # allow turning off rate limiting, for example during unit tests
 noratelimit_flag = os.environ.get('NORATELIMIT', False)
@@ -145,7 +141,7 @@ def api_fetch_leaderboard(round_num, tournament_num):
         round_num, tournament_num))
     arguments = {'number': round_num, 'tournament': tournament_num}
     # FIXME
-    q = query if round_num > 100 else query_old
+    q = query if round_num > changes['staking_only'] else query_old
     return napi.raw_query(q, arguments)['data']['rounds']
 
 
@@ -208,11 +204,11 @@ def fetch_one(round_num, tournament_num, tournament_name, status):
             df['nmr_burned'] = (df['nmr_staked'] * df['stake_resolution_destroyed']).astype(float)
 
             # staking bonus
-            if round_num >= 154:
+            if round_num >= changes['staking_bonus_start']:
                 staking_bonus_perc = 0.05
                 bonus_nmr_only = df['nmr_staked'] * staking_bonus_perc
                 bonus_split = df['nmr_staking'] - df['nmr_staking'] / (1 + staking_bonus_perc)
-                if round_num == 158:
+                if round_num == changes['reputation_bonus_start']:
                     df['nmr_bonus'] = bonus_nmr_only.where(df['usd_staking'].isna(), bonus_split)
                     df['usd_bonus'] = df['usd_staking'] - df['usd_staking'] / (1 + staking_bonus_perc)
                     df['usd_staking'] = df['usd_staking'] - df['usd_bonus']
@@ -222,7 +218,8 @@ def fetch_one(round_num, tournament_num, tournament_name, status):
                     df['nmr_bonus'] = bonus_nmr_only
 
             # partial burns
-            if round_num >= 154 and 'nmr_returned' in df:
+            if (round_num >= changes['staking_bonus_start']
+                and 'nmr_returned' in df):
                 df['nmr_burned'] -= df['nmr_returned'].fillna(0)
 
         return df

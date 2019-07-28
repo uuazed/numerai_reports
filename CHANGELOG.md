@@ -2,6 +2,8 @@
 Notable changes to this project.
 
 ## [dev]
+- added log of tournament changes (`settings.events`)
+- use event log instead of magic numbers
 - increase test coverage to >90%
 
 ## [0.3.3 - 2019-07-27]

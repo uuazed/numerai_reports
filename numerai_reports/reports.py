@@ -1,13 +1,15 @@
 from __future__ import division
 
 import collections
+import logging
 
 import numpy as np
 import pandas as pd
 
 from numerai_reports import leaderboard
+from numerai_reports.settings import changes
 
-
+logger = logging.getLogger(__name__)
 lb = leaderboard.Leaderboard()
 
 
@@ -86,7 +88,7 @@ def _calc_reputation(round_num, window_size=20):
 
     agg = {'stake': "sum", "mu": "mean"}
 
-    if round_num < 164:
+    if round_num < changes['reputation_bonus_averaging']:
         # fill tournaments user's haven't participated in
         df['mu'] = df['live_auroc'].fillna(0.4)
         # everything is equally weighted
@@ -96,7 +98,7 @@ def _calc_reputation(round_num, window_size=20):
         # use correlation score
         # use auc-0.5 for rounds before 168
         df["mu"] = np.where(
-            df['round_num'] >= 168,
+            df['round_num'] >= changes['correlation_score_start'],
             df['live_correlation'],
             df['live_auroc'] - 0.5)
         df['mu'] = df['mu'].fillna(-0.1)
@@ -153,12 +155,12 @@ def payments(users, round_start, round_end=None):
 
     reps = []
     for round_num in df['round_num'].unique().tolist():
-        if round_num >= 158:
+        if round_num >= changes['reputation_bonus_start']:
             df_rep = reputation_bonus(round_num)
             df_rep = df_rep[df_rep.index.isin(users)]
             bonus = df_rep['bonus'].sum()
         # FIXME verify start round of 0.1 NMR bonus
-        elif round_num >= 101:
+        elif round_num >= changes['reputation_bonus_0.1']:
             df_rep = df[df['round_num'] == round_num]
             bonus = (df_rep['pass'] * 0.1).sum()
         else:
