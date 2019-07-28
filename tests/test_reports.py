@@ -120,3 +120,8 @@ def test_reputation(napi):
 
     assert res.loc['121-140'].round(3).tolist() == [0.491, 0.514]
     assert res.loc['131-150'].round(3).tolist() == [0.500, 0.512]
+
+
+def test_summary(napi):
+    res = reports.summary(100, 120)
+    assert res.loc[111].round(3).tolist() == [0.5, 2, 4, 0.5, 2.0]

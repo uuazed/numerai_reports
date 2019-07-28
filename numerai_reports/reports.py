@@ -235,15 +235,17 @@ def dominance(user, round_start, round_end=None,
 def summary(round_start, round_end=None):
     df = lb[round_start: round_end]
     df['cutoff'] = df['staking_cutoff'].astype(float)
+    df['tourney_user'] = df['tournament'] + "_" + df['username']
     df = df.groupby('round_num').agg({'pass': 'mean',
                                       'username': 'nunique',
                                       'tournament': 'count',
-                                      'cutoff': 'mean'})
+                                      'cutoff': 'mean',
+                                      'tourney_user': 'nunique'})
     df.rename(columns={'pass': 'pass_rate',
                        'username': 'users',
-                       'tournament': 'submissions'}, inplace=True)
-    df['tourneys/user'] = (df['submissions'] / df['users']).round(2)
-
+                       'tournament': 'tournaments'}, inplace=True)
+    df['tourneys/user'] = (df['tourney_user'] / df['users']).round(2)
+    del df['tourney_user']
     df = df.round(2)
 
     return df
