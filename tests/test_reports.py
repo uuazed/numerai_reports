@@ -124,4 +124,4 @@ def test_reputation(napi):
 
 def test_summary(napi):
     res = reports.summary(100, 120)
-    assert res.loc[111].round(3).tolist() == [0.5, 2, 4, 0.5, 2.0]
+    assert res.loc[111].round(3).tolist() == [2.0, 4.0, 2.0, 0.5, 0.5]

@@ -247,5 +247,6 @@ def summary(round_start, round_end=None):
     df['tourneys/user'] = (df['tourney_user'] / df['users']).round(2)
     del df['tourney_user']
     df = df.round(2)
+    df = df[['users', 'tournaments', 'tourneys/user', 'pass_rate', 'cutoff']]
 
     return df
