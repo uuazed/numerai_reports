@@ -191,7 +191,7 @@ def fetch_one(round_num, tournament_num, tournament_name, status):
                 df['nmr_general'] = df['nmr_general'].astype(float)
             if 'nmr_returned' in df:
                 df['nmr_returned'] = df['nmr_returned'].astype(float)
-            if raw[0]['benchmark_type'] == "auroc":
+            if raw[0]['benchmark_type'] in ("auroc", "correlation"):
                 staking_cutoff = raw[0]['selection']['bCutoff']
             else:
                 staking_cutoff = raw[0]['selection']['pCutoff']
