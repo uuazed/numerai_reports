@@ -207,8 +207,8 @@ def fetch_one(round_num, tournament_num, tournament_name, status):
             if round_num >= changes['staking_bonus_start']:
                 staking_bonus_perc = 0.05
                 bonus_nmr_only = df['nmr_staked'] * staking_bonus_perc
-                bonus_split = df['nmr_staking'] - df['nmr_staking'] / (1 + staking_bonus_perc)
                 if round_num == changes['reputation_bonus_start']:
+                    bonus_split = df['nmr_staking'] - df['nmr_staking'] / (1 + staking_bonus_perc)
                     df['nmr_bonus'] = bonus_nmr_only.where(df['usd_staking'].isna(), bonus_split)
                     df['usd_bonus'] = df['usd_staking'] - df['usd_staking'] / (1 + staking_bonus_perc)
                     df['usd_staking'] = df['usd_staking'] - df['usd_bonus']
