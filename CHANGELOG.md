@@ -1,10 +1,11 @@
 # Changelog
 Notable changes to this project.
 
-## [dev]
+## [0.4.1] - 2019-10-01
 - added log of tournament changes (`settings.events`)
 - use event log instead of magic numbers
 - increase test coverage to >90%
+- Fix missing columns and data fetch for rounds using correclation score (@jrdi)
 
 ## [0.3.3 - 2019-07-27]
 - `reputation` report gained a `rank` option, that allows showing the
