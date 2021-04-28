@@ -14,3 +14,6 @@ changes = {
     "reputation_bonus_averaging": 164,
     "correlation_score_start": 168,
     }
+
+
+CLOUD_BUCKET = "gs://numerai-reports"

@@ -1,4 +1,2 @@
 pandas
 numerapi
-joblib
-ratelimit
