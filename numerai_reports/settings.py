@@ -16,4 +16,4 @@ changes = {
     }
 
 
-CLOUD_BUCKET = "gs://numerai-reports"
+CLOUD_BUCKET = "numerai-reports"

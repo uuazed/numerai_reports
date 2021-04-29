@@ -8,6 +8,7 @@ import tqdm
 import utils
 import settings
 
+
 napi = numerapi.NumerAPI(verbosity='warn')
 
 
@@ -47,7 +48,7 @@ def fetch_one_model(username="uuazed"):
     return df, raw['medals']
 
 
-def fetch_leaderboard(limit=5000):
+def fetch_leaderboard(limit=10000):
     query = '''
         query($limit: Int
               $offset: Int) {
@@ -72,7 +73,6 @@ def fetch_leaderboard(limit=5000):
     return df
 
 
-# TODO save in cloud
 def fetch_from_api():
     leaderboard = fetch_leaderboard()
     models = leaderboard['model'].to_list()
@@ -108,14 +108,16 @@ def fetch_from_api():
 def fetch_from_cloud():
     try:
         leaderboard = pd.read_parquet(
-            os.path.join(settings.CLOUD_BUCKET, "leaderboard.parq"))
+            os.path.join("gs://" + settings.CLOUD_BUCKET, "leaderboard.parq"))
         details = pd.read_parquet(
-            os.path.join(settings.CLOUD_BUCKET, "details.parq"))
+            os.path.join("gs://" + settings.CLOUD_BUCKET, "details.parq"))
         return details, leaderboard
     except FileNotFoundError:
         return None, None
 
 
-details, leaderboard = fetch_from_cloud()
-if details is None or leaderboard is None:
-     details, leaderboard = fetch_from_api()
+def load():
+    details, leaderboard = fetch_from_cloud()
+    if details is None or leaderboard is None:
+        details, leaderboard = fetch_from_api()
+    return details, leaderboard
