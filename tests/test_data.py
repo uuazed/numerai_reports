@@ -6,12 +6,13 @@ from numerai_reports import data
 from . import napi
 
 
-def test_fetch_leaderboard(napi):
+def test_fetch_one_model(napi):
     # normal behaviour
-    df = data.fetch_leaderboard(100)
+    df, _ = data.fetch_one_model("one")
     assert isinstance(df, pd.DataFrame)
 
-    # unknown round
+    # unknown user
     with pytest.raises(ValueError) as excinfo:
-        data.fetch_leaderboard(-1)
-    assert "no such round" in str(excinfo.value)
+        print(data.fetch_one_model("not_available"))
+
+    assert "unknown model" in str(excinfo.value)

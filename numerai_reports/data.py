@@ -1,20 +1,21 @@
 from functools import lru_cache
 import os
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 
 import pandas as pd
 import numerapi
 import tqdm
 
-import utils
-import settings
+from numerai_reports import utils
+from numerai_reports import settings
 
 
 napi = numerapi.NumerAPI(verbosity='warn')
+NO_CLOUD_BuCKET = os.environ.get('NO_CLOUD_BuCKET', False)
 
 
 @lru_cache(maxsize=None)
-def fetch_one_model(username: str = "uuazed") -> pd.DataFrame:
+def fetch_one_model(username: str = "uuazed") -> Tuple[pd.DataFrame, Dict]:
     query = '''
         query($username: String!) {
           v2UserProfile(username: $username) {
@@ -41,6 +42,8 @@ def fetch_one_model(username: str = "uuazed") -> pd.DataFrame:
     '''
     arguments = {'username': username}
     raw = napi.raw_query(query, arguments)['data']['v2UserProfile']
+    if raw is None:
+        raise ValueError(f"unknown model {username}")
     df = pd.DataFrame(raw['latestRoundPerformances'])
     df['model'] = username
     df['account'] = raw['accountId']
@@ -74,7 +77,7 @@ def fetch_leaderboard(limit: int = 10000) -> pd.DataFrame:
     return df
 
 
-def fetch_from_api() -> Tuple(pd.DataFrame, pd.DataFrame):
+def fetch_from_api() -> Tuple[pd.DataFrame, pd.DataFrame]:
     leaderboard = fetch_leaderboard()
     models = leaderboard['model'].to_list()
     dfs = [fetch_one_model(model) for model in tqdm.tqdm(models)]
@@ -106,8 +109,8 @@ def fetch_from_api() -> Tuple(pd.DataFrame, pd.DataFrame):
     return df, leaderboard
 
 
-def fetch_from_cloud() -> Tuple(Optional[pd.DataFrame],
-                                Optional[pd.DataFrame]):
+def fetch_from_cloud() -> Tuple[Optional[pd.DataFrame],
+                                Optional[pd.DataFrame]]:
     try:
         leaderboard = pd.read_parquet(
             os.path.join("gs://" + settings.CLOUD_BUCKET, "leaderboard.parq"))
@@ -118,8 +121,31 @@ def fetch_from_cloud() -> Tuple(Optional[pd.DataFrame],
         return None, None
 
 
-def load() -> Tuple(pd.DataFrame, pd.DataFrame):
-    details, leaderboard = fetch_from_cloud()
-    if details is None or leaderboard is None:
-        details, leaderboard = fetch_from_api()
-    return details, leaderboard
+class Data(metaclass=utils.Singleton):
+
+    def __init__(self):
+        self._details = None
+        self._leaderboard = None
+
+    @property
+    def leaderboard(self):
+        if self._leaderboard is None:
+            self.load()
+        return self._leaderboard
+
+    @property
+    def details(self):
+        if self._details is None:
+            self.load()
+        return self._details
+
+    def load(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        if not NO_CLOUD_BuCKET:
+            details, leaderboard = fetch_from_cloud()
+        else:
+            details, leaderboard = None, None
+        if details is None or leaderboard is None:
+            details, leaderboard = fetch_from_api()
+        self._details = details
+        self._leaderboard = leaderboard
+        return details, leaderboard
