@@ -49,7 +49,7 @@ def main(register, run):
 
     flow.storage = Docker(
         registry_url="gcr.io/numerai-171710",
-        python_dependencies=['pandas', 'numerapi'],
+        python_dependencies=['pandas', 'numerapi', 'pyarrow'],
         files={os.path.abspath("data.py"): "modules/data.py",
                os.path.abspath("settings.py"): "modules/settings.py",
                os.path.abspath("utils.py"): "modules/utils.py",

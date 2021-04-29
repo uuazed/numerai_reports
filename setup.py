@@ -16,7 +16,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering"]
 
@@ -36,5 +35,5 @@ if __name__ == "__main__":
         license='MIT License',
         package_data={'numerai_reports': ['LICENSE', 'README.md']},
         packages=find_packages(exclude=['tests']),
-        install_requires=["pandas", "numerapi", "joblib", "ratelimit"],
+        install_requires=["pandas", "numerapi", "pyarrow"],
         )
