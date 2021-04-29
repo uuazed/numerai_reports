@@ -47,14 +47,16 @@ def payouts(models, groupby="round"):
     return result
 
 
-def medals_leaderboard(limit=10):
+def medals_leaderboard(limit=10, orderby="total"):
     cols = ['gold', 'silver', 'bronze']
     lb = leaderboard.groupby("account")[cols].sum()
     lb['total'] = lb.sum(axis=1)
-    lb.sort_values("total", ascending=False, inplace=True)
+    lb.sort_values(orderby, ascending=False, inplace=True)
     return lb.head(limit)
 
 
 def models_of_account(model):
     """return all models that belong the same account given a model name"""
-    return leaderboard[leaderboard['model'] == model]['model'].unique()
+    account = leaderboard[leaderboard['model'] == model]['account'].iloc[0]
+    res = leaderboard[leaderboard['account'] == account]['model'].unique()
+    return list(res)
