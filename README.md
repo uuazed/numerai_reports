@@ -19,19 +19,11 @@ If you encounter a problem or have suggestions, feel free to open an issue.
 # Installation
 `pip install --upgrade numerai_reports`
 
-# Usage
 
-Numerai_reports can be used as a regular, importable Python module or from the command
-line (TODO).
-
-
-## Python module
-
-Usage example:
+# Usage Example
 
     from numerai_reports import reports
-    print(reports.payments("slyfox", 160, 165))
-    print(reports.reputation("slyfox", 160, 165))
-    print(reports.pass_rate(160, 165))
-    print(reports.out_of_n(160, 165))
-    print(reports.dominance("uuazed", 160, 165))
+    print(reports.most_top_models())
+    print(reports.medals_leaderboard())
+    print(reports.medals_leaderboard(orderby="gold"))
+    print(reports.payouts(reports.models_of_account("uuazed")))
