@@ -1,5 +1,6 @@
 from functools import lru_cache
 import os
+from typing import Tuple, Optional
 
 import pandas as pd
 import numerapi
@@ -13,7 +14,7 @@ napi = numerapi.NumerAPI(verbosity='warn')
 
 
 @lru_cache(maxsize=None)
-def fetch_one_model(username="uuazed"):
+def fetch_one_model(username: str = "uuazed") -> pd.DataFrame:
     query = '''
         query($username: String!) {
           v2UserProfile(username: $username) {
@@ -48,7 +49,7 @@ def fetch_one_model(username="uuazed"):
     return df, raw['medals']
 
 
-def fetch_leaderboard(limit=10000):
+def fetch_leaderboard(limit: int = 10000) -> pd.DataFrame:
     query = '''
         query($limit: Int
               $offset: Int) {
@@ -73,7 +74,7 @@ def fetch_leaderboard(limit=10000):
     return df
 
 
-def fetch_from_api():
+def fetch_from_api() -> Tuple(pd.DataFrame, pd.DataFrame):
     leaderboard = fetch_leaderboard()
     models = leaderboard['model'].to_list()
     dfs = [fetch_one_model(model) for model in tqdm.tqdm(models)]
@@ -105,7 +106,8 @@ def fetch_from_api():
     return df, leaderboard
 
 
-def fetch_from_cloud():
+def fetch_from_cloud() -> Tuple(Optional[pd.DataFrame],
+                                Optional[pd.DataFrame]):
     try:
         leaderboard = pd.read_parquet(
             os.path.join("gs://" + settings.CLOUD_BUCKET, "leaderboard.parq"))
@@ -116,7 +118,7 @@ def fetch_from_cloud():
         return None, None
 
 
-def load():
+def load() -> Tuple(pd.DataFrame, pd.DataFrame):
     details, leaderboard = fetch_from_cloud()
     if details is None or leaderboard is None:
         details, leaderboard = fetch_from_api()

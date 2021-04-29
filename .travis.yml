@@ -10,8 +10,8 @@ install:
   - pip install pytest pytest_cov codecov
 
 script:
-  - python -m pytest --cov=numerapi
-  - flake8 numerapi
+  - python -m pytest --cov=numerai_reports
+  - flake8 numerai_reports
 
 after_success:
   - codecov
