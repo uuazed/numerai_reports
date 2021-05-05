@@ -58,7 +58,7 @@ def medals_leaderboard(limit: int = 10,
     lb = Data().leaderboard.groupby("account")[cols].sum()
     lb['total'] = lb.sum(axis=1)
     lb.sort_values(orderby, ascending=False, inplace=True)
-    return lb.head(limit)
+    return lb.astype(int).fillna(0).head(limit)
 
 
 def models_of_account(model: str) -> List[str]:
