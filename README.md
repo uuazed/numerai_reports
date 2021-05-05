@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/uuazed/numerai_reports.png)](https://travis-ci.org/uuazed/numerai_reports)
 [![codecov](https://codecov.io/gh/uuazed/numerai_reports/branch/master/graph/badge.svg)](https://codecov.io/gh/uuazed/numerai_reports)
 [![Requirements Status](https://requires.io/github/uuazed/numerai_reports/requirements.svg?branch=master)](https://requires.io/github/uuazed/numerai_reports/requirements/?branch=master)
+[![PyPI](https://img.shields.io/pypi/v/numerai_reports.svg)](https://pypi.python.org/pypi/numerai_reports)
 
 # Numerai Reports
 Collection of reports about the numer.ai machine learning competition.
