@@ -1,7 +1,7 @@
 # Changelog
 Notable changes to this project.
 
-## [0.5] - development
+## [0.5] - 2021-05-05
 - complete rewrite after many tournament changes
 
 ## [0.4.1] - 2019-10-01
