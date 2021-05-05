@@ -1,6 +1,9 @@
 # Changelog
 Notable changes to this project.
 
+## [0.5.1] - 2021-05-05
+- added missing dependencies gcsfs and fsspec
+
 ## [0.5] - 2021-05-05
 - complete rewrite after many tournament changes
 

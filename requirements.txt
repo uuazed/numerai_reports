@@ -1,3 +1,5 @@
 pandas
 numerapi
 pyarrow
+fsspec
+gcsfs
