@@ -6,15 +6,16 @@ from prefect import task, Flow
 from prefect.schedules.clocks import CronClock
 from prefect.schedules import Schedule
 from prefect.storage import Docker
+from prefect.engine.results import GCSResult
+from prefect.utilities.gcp import get_storage_client
 
 from google.cloud import storage
 
-import settings
-import data
+from numerai_reports import settings
+from numerai_reports import data
 
 
-@task(log_stdout=False, max_retries=3,
-      retry_delay=datetime.timedelta(minutes=10))
+@task(log_stdout=False)
 def fetch():
     details, leaderboard = data.fetch_from_api()
     filename_de = "details.parq"
@@ -27,7 +28,7 @@ def fetch():
 @task(log_stdout=False, max_retries=3,
       retry_delay=datetime.timedelta(minutes=10))
 def upload_to_gcs(filenames):
-    storage_client = storage.Client()
+    storage_client = get_storage_client()
     bucket = storage_client.get_bucket(settings.CLOUD_BUCKET)
     for filename in filenames:
         blob = bucket.blob(filename)
@@ -39,22 +40,24 @@ def upload_to_gcs(filenames):
 @click.option('--run', is_flag=True, default=False)
 def main(register, run):
     if register:
-        schedule = Schedule(clocks=[CronClock("1 20 * * *")])
+        schedule = Schedule(clocks=[CronClock("1 19 * * *")])
     else:
         schedule = None
 
-    with Flow("numerai-reports", schedule) as flow:
+    result = GCSResult(bucket='uuazed-prefect')
+    with Flow("numerai-reports", schedule, result=result) as flow:
         filenames = fetch()
         upload_to_gcs(filenames)
 
     flow.storage = Docker(
         registry_url="gcr.io/numerai-171710",
         python_dependencies=['pandas', 'numerapi', 'pyarrow'],
-        files={os.path.abspath("data.py"): "modules/data.py",
-               os.path.abspath("settings.py"): "modules/settings.py",
-               os.path.abspath("utils.py"): "modules/utils.py",
+        files={os.path.abspath("data.py"): "numerai_reports/data.py",
+               os.path.abspath("settings.py"): "numerai_reports/settings.py",
+               os.path.abspath("utils.py"): "numerai_reports/utils.py",
                },
-        env_vars={"PYTHONPATH": "$PYTHONPATH:modules/"},)
+        env_vars={"PYTHONPATH": "$PYTHONPATH:/"},
+        secrets=["GCP_CREDENTIALS"])
 
     if register:
         flow.register(project_name="numerai", labels=["docker"])

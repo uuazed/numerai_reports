@@ -90,11 +90,7 @@ def napi(monkeypatch):
                     }
                   }
             else:
-                return {
-                  "data": {
-                    "v2UserProfile": None
-                  }
-                }
+                return {"data": None}
         else:
             raise "unpatched api call"
 

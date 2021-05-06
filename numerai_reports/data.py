@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Tuple, Optional, List
 
 import pandas as pd
@@ -10,6 +11,7 @@ from numerai_reports import settings
 
 
 napi = numerapi.NumerAPI(verbosity='warn')
+logger = logging.getLogger(__name__)
 NO_CLOUD_BuCKET = os.environ.get('NO_CLOUD_BuCKET', False)
 
 
