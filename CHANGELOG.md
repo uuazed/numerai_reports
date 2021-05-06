@@ -1,6 +1,10 @@
 # Changelog
 Notable changes to this project.
 
+
+## dev
+- 4 times faster data fetch by using aliases
+
 ## [0.5.1] - 2021-05-05
 - added missing dependencies gcsfs and fsspec
 

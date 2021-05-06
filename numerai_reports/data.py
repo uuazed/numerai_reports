@@ -1,6 +1,5 @@
-from functools import lru_cache
 import os
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Optional, List
 
 import pandas as pd
 import numerapi
@@ -14,42 +13,51 @@ napi = numerapi.NumerAPI(verbosity='warn')
 NO_CLOUD_BuCKET = os.environ.get('NO_CLOUD_BuCKET', False)
 
 
-@lru_cache(maxsize=None)
-def fetch_one_model(username: str = "uuazed") -> Tuple[pd.DataFrame, Dict]:
-    query = '''
-        query($username: String!) {
-          v2UserProfile(username: $username) {
-            accountId
-            id
-            medals {
-              gold
-              silver
-              bronze
-            }
-            latestRoundPerformances {
-              correlation
-              date
-              fnc
-              mmc
-              correlationWithMetamodel
-              payoutPending
-              roundNumber
-              selectedStakeValue
-              leaderboardBonus
-            }
-          }
-        }
-    '''
-    arguments = {'username': username}
-    raw = napi.raw_query(query, arguments)['data']['v2UserProfile']
-    if raw is None:
-        raise ValueError(f"unknown model {username}")
-    df = pd.DataFrame(raw['latestRoundPerformances'])
-    df['model'] = username
-    df['account'] = raw['accountId']
-    df['id'] = raw['id']
-    raw['medals']['model'] = username
-    return df, raw['medals']
+def fetch_models(models: List[str],
+                 batch_size: int = 100) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    dfs = []
+    medals = []
+    for chunk in tqdm.tqdm(utils.chunks(models, batch_size)):
+        model_queries = [f'_{i} : v2UserProfile(username : "{m}"){{...f}}'
+                         for i, m in enumerate(chunk)]
+        query = '{' + '\n'.join(model_queries) + """}
+            fragment f on V2UserProfile {
+                accountId
+                username
+                id
+                medals {
+                  gold
+                  silver
+                  bronze
+                }
+                latestRoundPerformances {
+                  correlation
+                  date
+                  fnc
+                  mmc
+                  correlationWithMetamodel
+                  payoutPending
+                  roundNumber
+                  selectedStakeValue
+                  leaderboardBonus
+                }
+            }"""
+        raw = napi.raw_query(query)['data']
+        for _, vals in raw.items():
+            if vals is None:
+                continue
+            df = pd.DataFrame(vals['latestRoundPerformances'])
+            df['model'] = vals['username']
+            df['account'] = vals['accountId']
+            df['id'] = vals['id']
+            vals['medals']['model'] = vals['username']
+            dfs.append(df)
+            medals.append(vals['medals'])
+
+    # put everything together
+    df = pd.concat(dfs)
+    medals = pd.DataFrame.from_records(medals)
+    return df, medals
 
 
 def fetch_leaderboard(limit: int = 10000) -> pd.DataFrame:
@@ -79,10 +87,7 @@ def fetch_leaderboard(limit: int = 10000) -> pd.DataFrame:
 
 def fetch_from_api() -> Tuple[pd.DataFrame, pd.DataFrame]:
     leaderboard = fetch_leaderboard()
-    models = leaderboard['model'].to_list()
-    dfs = [fetch_one_model(model) for model in tqdm.tqdm(models)]
-    df = pd.concat([details for details, _ in dfs])
-    medals = pd.DataFrame.from_records([med for _, med in dfs])
+    df, medals = fetch_models(leaderboard['model'].to_list())
     df.dropna(subset=['correlation'], inplace=True)
     df.rename(columns={'correlation': 'corr',
                        'correlationWithMetamodel': "corr_with_mm",
