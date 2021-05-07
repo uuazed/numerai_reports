@@ -1,6 +1,8 @@
 # Changelog
 Notable changes to this project.
 
+## dev
+- models_of_account: better error handling
 
 ## [0.5.2] - 2021-05-07
 - 4 times faster data fetch by using aliases

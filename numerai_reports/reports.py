@@ -1,8 +1,12 @@
 from typing import List
+import logging
 
 import pandas as pd
 
 from numerai_reports.data import Data
+
+
+logger = logging.getLogger(__name__)
 
 
 def most_top_models(limit: int = 100, metric: str = "corr") -> pd.DataFrame:
@@ -64,6 +68,10 @@ def medals_leaderboard(limit: int = 10,
 def models_of_account(model: str) -> List[str]:
     """return all models that belong the same account given a model name"""
     lb = Data().leaderboard
-    account = lb[lb['model'] == model]['account'].iloc[0]
+    try:
+        account = lb[lb['model'] == model]['account'].iloc[0]
+    except IndexError:
+        logger.warning(f"Unknown model {model}. Check spelling.")
+        return []
     res = lb[lb['account'] == account]['model'].unique()
     return list(res)
