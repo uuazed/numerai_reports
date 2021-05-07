@@ -90,7 +90,6 @@ def fetch_leaderboard(limit: int = 10000) -> pd.DataFrame:
 def fetch_from_api() -> Tuple[pd.DataFrame, pd.DataFrame]:
     leaderboard = fetch_leaderboard()
     df, medals = fetch_models(leaderboard['model'].to_list())
-    df.dropna(subset=['correlation'], inplace=True)
     df.rename(columns={'correlation': 'corr',
                        'correlationWithMetamodel': "corr_with_mm",
                        'roundNumber': 'round',
@@ -105,13 +104,15 @@ def fetch_from_api() -> Tuple[pd.DataFrame, pd.DataFrame]:
     # handle account / model information
     account_names = df[df['id'] == df['account']].set_index('account')['model']
     account_names = account_names.drop_duplicates().to_dict()
-    df['account'] = df['account'].map(account_names)
+    df['account'] = df['account'].map(account_names).fillna(df['account'])
     df.drop(columns=['id', 'leaderboard_bonus'], inplace=True)
 
     # add account information to leaderboard
     account_map = df.set_index('model')['account'].to_dict()
     leaderboard['account'] = leaderboard['model'].map(account_map)
     leaderboard = leaderboard.merge(medals, on="model", how="left")
+
+    df.dropna(subset=['corr'], inplace=True)
 
     return df, leaderboard
 
