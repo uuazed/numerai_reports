@@ -2,8 +2,9 @@
 Notable changes to this project.
 
 
-## dev
+## [0.5.2] - 2021-05-07
 - 4 times faster data fetch by using aliases
+- fix `models_of_account`
 
 ## [0.5.1] - 2021-05-05
 - added missing dependencies gcsfs and fsspec
