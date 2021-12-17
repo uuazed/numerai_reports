@@ -9,8 +9,6 @@ from prefect.storage import Docker
 from prefect.engine.results import GCSResult
 from prefect.utilities.gcp import get_storage_client
 
-from google.cloud import storage
-
 from numerai_reports import settings
 from numerai_reports import data
 

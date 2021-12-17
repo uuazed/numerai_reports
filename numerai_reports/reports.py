@@ -59,7 +59,7 @@ def payouts(models: List[str], groupby: str = "round") -> pd.DataFrame:
 def medals_leaderboard(limit: int = 10,
                        orderby: str = "total") -> pd.DataFrame:
     cols = ['gold', 'silver', 'bronze']
-    lb = Data().leaderboard.groupby("account")[cols].sum()
+    lb = Data().leaderboard.groupby("model")[cols].sum()
     lb['total'] = lb.sum(axis=1)
     lb.sort_values(orderby, ascending=False, inplace=True)
     return lb.astype(int).fillna(0).head(limit)

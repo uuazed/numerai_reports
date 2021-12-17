@@ -20,11 +20,10 @@ def fetch_models(models: List[str],
     dfs = []
     medals = []
     for chunk in tqdm.tqdm(utils.chunks(models, batch_size)):
-        model_queries = [f'_{i} : v2UserProfile(username : "{m}"){{...f}}'
+        model_queries = [f'_{i} : v3UserProfile(username : "{m}"){{...f}}'
                          for i, m in enumerate(chunk)]
         query = '{' + '\n'.join(model_queries) + """}
-            fragment f on V2UserProfile {
-                accountId
+            fragment f on V3UserProfile {
                 username
                 id
                 medals {
@@ -50,7 +49,6 @@ def fetch_models(models: List[str],
                 continue
             df = pd.DataFrame(vals['latestRoundPerformances'])
             df['model'] = vals['username']
-            df['account'] = vals['accountId']
             df['id'] = vals['id']
             vals['medals']['model'] = vals['username']
             dfs.append(df)
@@ -101,15 +99,8 @@ def fetch_from_api() -> Tuple[pd.DataFrame, pd.DataFrame]:
                     df['leaderboard_bonus'].astype("float"))
     df['date'] = pd.to_datetime(df['date']).dt.date
 
-    # handle account / model information
-    account_names = df[df['id'] == df['account']].set_index('account')['model']
-    account_names = account_names.drop_duplicates().to_dict()
-    df['account'] = df['account'].map(account_names).fillna(df['account'])
     df.drop(columns=['id', 'leaderboard_bonus'], inplace=True)
 
-    # add account information to leaderboard
-    account_map = df.set_index('model')['account'].to_dict()
-    leaderboard['account'] = leaderboard['model'].map(account_map)
     leaderboard = leaderboard.merge(medals, on="model", how="left")
 
     df.dropna(subset=['corr'], inplace=True)
