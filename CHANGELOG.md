@@ -3,6 +3,7 @@ Notable changes to this project.
 
 ## dev
 - deprecate everything account related - information no longer provided my numerai
+- migrate to `V3UserProfile`
 
 ## [0.5.2] - 2021-05-07
 - 4 times faster data fetch by using aliases

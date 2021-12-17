@@ -20,7 +20,7 @@ def fetch_models(models: List[str],
     dfs = []
     medals = []
     for chunk in tqdm.tqdm(utils.chunks(models, batch_size)):
-        model_queries = [f'_{i} : v3UserProfile(username : "{m}"){{...f}}'
+        model_queries = [f'_{i} : v3UserProfile(modelName : "{m}"){{...f}}'
                          for i, m in enumerate(chunk)]
         query = '{' + '\n'.join(model_queries) + """}
             fragment f on V3UserProfile {
@@ -31,23 +31,22 @@ def fetch_models(models: List[str],
                   silver
                   bronze
                 }
-                latestRoundPerformances {
-                  correlation
-                  date
+                roundModelPerformances {
+                  corr
+                  roundResolveTime
                   fnc
                   mmc
-                  correlationWithMetamodel
-                  payoutPending
+                  corrWMetamodel
+                  payout
                   roundNumber
                   selectedStakeValue
-                  leaderboardBonus
                 }
             }"""
         raw = napi.raw_query(query)['data']
         for _, vals in raw.items():
             if vals is None:
                 continue
-            df = pd.DataFrame(vals['latestRoundPerformances'])
+            df = pd.DataFrame(vals['roundModelPerformances'])
             df['model'] = vals['username']
             df['id'] = vals['id']
             vals['medals']['model'] = vals['username']
@@ -88,15 +87,12 @@ def fetch_leaderboard(limit: int = 10000) -> pd.DataFrame:
 def fetch_from_api() -> Tuple[pd.DataFrame, pd.DataFrame]:
     leaderboard = fetch_leaderboard()
     df, medals = fetch_models(leaderboard['model'].to_list())
-    df.rename(columns={'correlation': 'corr',
-                       'correlationWithMetamodel': "corr_with_mm",
+    df.rename(columns={'corrWMetamodel': "corr_with_mm",
                        'roundNumber': 'round',
                        'selectedStakeValue': 'stake',
-                       'payoutPending': 'payout'}, inplace=True)
+                       "roundResolveTime": "date"}, inplace=True)
     df.columns = [utils.to_snake_case(col) for col in df.columns]
     df['stake'] = df['stake'].astype("float")
-    df['payout'] = (df['payout'].astype("float") +
-                    df['leaderboard_bonus'].astype("float"))
     df['date'] = pd.to_datetime(df['date']).dt.date
 
     df.drop(columns=['id', 'leaderboard_bonus'], inplace=True)
@@ -148,3 +144,9 @@ class Data(metaclass=utils.Singleton):
         self._details = details
         self._leaderboard = leaderboard
         return details, leaderboard
+
+
+if __name__ == "__main__":
+    details, leaderboard = fetch_from_api()
+    print(details)
+    print(leaderboard)
