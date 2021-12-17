@@ -2,7 +2,7 @@
 Notable changes to this project.
 
 ## dev
-- models_of_account: better error handling
+- deprecate everything account related - information no longer provided my numerai
 
 ## [0.5.2] - 2021-05-07
 - 4 times faster data fetch by using aliases

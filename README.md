@@ -24,7 +24,6 @@ If you encounter a problem or have suggestions, feel free to open an issue.
 # Usage Example
 
     from numerai_reports import reports
-    print(reports.most_top_models())
     print(reports.medals_leaderboard())
     print(reports.medals_leaderboard(orderby="gold"))
-    print(reports.payouts(reports.models_of_account("uuazed")))
+    print(reports.payouts(["uuazed", "uuazed2"]))
