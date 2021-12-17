@@ -9,19 +9,6 @@ from numerai_reports.data import Data
 logger = logging.getLogger(__name__)
 
 
-def most_top_models(limit: int = 100, metric: str = "corr") -> pd.DataFrame:
-    if metric not in {'corr', 'fnc', 'mmc'}:
-        raise ValueError(f"invalid metric {metric}")
-    agg = {"corr_rep": "count", "model": lambda g: ", ".join(sorted(list(g)))}
-    subset = Data().leaderboard.sort_values(f'{metric}_rep', ascending=False)\
-                               .head(limit)
-    grouped = subset.groupby("account").agg(agg)
-    grouped.rename(columns={"corr_rep": "#models", "model": "models"},
-                   inplace=True)
-    grouped = grouped[grouped['#models'] > 1]
-    return grouped.sort_values("#models", ascending=False)
-
-
 def all_positive(rounds: int = 20, metric: str = "corr") -> pd.DataFrame:
     "models having positive 'metric' in the each of the last 'rounds' rounds"
     if metric not in {'corr', 'fnc', 'mmc'}:
