@@ -95,7 +95,7 @@ def fetch_from_api() -> Tuple[pd.DataFrame, pd.DataFrame]:
     df['stake'] = df['stake'].astype("float")
     df['date'] = pd.to_datetime(df['date']).dt.date
 
-    df.drop(columns=['id', 'leaderboard_bonus'], inplace=True)
+    df.drop(columns=['id'], inplace=True)
 
     leaderboard = leaderboard.merge(medals, on="model", how="left")
 
