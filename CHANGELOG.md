@@ -1,7 +1,7 @@
 # Changelog
 Notable changes to this project.
 
-## dev
+## [0.5.3] - 2021-12-20
 - deprecate everything account related - information no longer provided my numerai
 - migrate to `V3UserProfile`
 
