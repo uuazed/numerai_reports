@@ -1,7 +1,7 @@
 # Changelog
 Notable changes to this project.
 
-## dev
+## [0.5.4] - 2021-12-23
 - add number of active rounds of a model to `medals_leaderboard`
 
 ## [0.5.3] - 2021-12-20
