@@ -1,4 +1,5 @@
 import os
+import time
 import logging
 from typing import Tuple, Optional, List
 
@@ -42,7 +43,12 @@ def fetch_models(models: List[str],
                   selectedStakeValue
                 }
             }"""
-        raw = napi.raw_query(query)['data']
+        try:
+            raw = napi.raw_query(query)['data']
+        except KeyError:
+            logger.error("failed fetching chunk, retrying..")
+            time.wait(60)
+            raw = napi.raw_query(query)['data']
         for _, vals in raw.items():
             if vals is None:
                 continue
@@ -84,14 +90,15 @@ def fetch_leaderboard(limit: int = 10000) -> pd.DataFrame:
     return df
 
 
-def fetch_from_api() -> Tuple[pd.DataFrame, pd.DataFrame]:
-    leaderboard = fetch_leaderboard()
+def fetch_from_api(limit: int = 10000) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    leaderboard = fetch_leaderboard(limit=limit)
     df, medals = fetch_models(leaderboard['model'].to_list())
     df.rename(columns={'corrWMetamodel': "corr_with_mm",
                        'roundNumber': 'round',
                        'selectedStakeValue': 'stake',
                        "roundResolveTime": "date"}, inplace=True)
     df.columns = [utils.to_snake_case(col) for col in df.columns]
+    df.dropna(subset=["corr"], inplace=True)
     df['stake'] = df['stake'].astype("float")
     df['date'] = pd.to_datetime(df['date']).dt.date
 
@@ -99,6 +106,9 @@ def fetch_from_api() -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     leaderboard = leaderboard.merge(medals, on="model", how="left")
 
+    active_rounds = df.groupby("model", as_index=False)["round"].count()
+    active_rounds.rename(columns={"round": "active_rounds"}, inplace=True)
+    leaderboard = leaderboard.merge(active_rounds, on="model", how="left")
     df.dropna(subset=['corr'], inplace=True)
 
     return df, leaderboard
@@ -147,6 +157,6 @@ class Data(metaclass=utils.Singleton):
 
 
 if __name__ == "__main__":
-    details, leaderboard = fetch_from_api()
-    print(details)
-    print(leaderboard)
+    df_details, df_leaderboard = fetch_from_api(limit=100)
+    print(df_details)
+    print(df_leaderboard)
