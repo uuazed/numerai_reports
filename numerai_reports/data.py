@@ -1,19 +1,16 @@
-import os
 import time
 import logging
-from typing import Tuple, Optional, List
+from typing import Tuple, List
 
 import pandas as pd
 import numerapi
 import tqdm
 
 from numerai_reports import utils
-from numerai_reports import settings
 
 
 napi = numerapi.NumerAPI(verbosity='warn')
 logger = logging.getLogger(__name__)
-NO_CLOUD_BuCKET = os.environ.get('NO_CLOUD_BuCKET', False)
 
 
 def fetch_models(models: List[str],
@@ -47,7 +44,7 @@ def fetch_models(models: List[str],
             raw = napi.raw_query(query)['data']
         except KeyError:
             logger.error("failed fetching chunk, retrying..")
-            time.wait(60)
+            time.sleep(60)
             raw = napi.raw_query(query)['data']
         for _, vals in raw.items():
             if vals is None:
@@ -114,18 +111,6 @@ def fetch_from_api(limit: int = 10000) -> Tuple[pd.DataFrame, pd.DataFrame]:
     return df, leaderboard
 
 
-def fetch_from_cloud() -> Tuple[Optional[pd.DataFrame],
-                                Optional[pd.DataFrame]]:
-    try:
-        leaderboard = pd.read_parquet(
-            os.path.join("gs://" + settings.CLOUD_BUCKET, "leaderboard.parq"))
-        details = pd.read_parquet(
-            os.path.join("gs://" + settings.CLOUD_BUCKET, "details.parq"))
-        return details, leaderboard
-    except FileNotFoundError:
-        return None, None
-
-
 class Data(metaclass=utils.Singleton):
 
     def __init__(self):
@@ -145,12 +130,7 @@ class Data(metaclass=utils.Singleton):
         return self._details
 
     def load(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        if not NO_CLOUD_BuCKET:
-            details, leaderboard = fetch_from_cloud()
-        else:
-            details, leaderboard = None, None
-        if details is None or leaderboard is None:
-            details, leaderboard = fetch_from_api()
+        details, leaderboard = fetch_from_api()
         self._details = details
         self._leaderboard = leaderboard
         return details, leaderboard
