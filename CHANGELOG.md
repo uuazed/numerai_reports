@@ -1,7 +1,7 @@
 # Changelog
 Notable changes to this project.
 
-## [dev]
+## [0.5.5] - 2022-03-04
 - disable loading data from cloud bucket
 
 ## [0.5.4] - 2021-12-23
