@@ -28,19 +28,18 @@ def all_star_club(top_n: int = 100) -> pd.DataFrame:
     cols = ['model', 'account', "corr_rank", "corr_rep",
             "mmc_rank", "mmc_rep", "fnc_rank", "fnc_rep"]
     lb = Data().leaderboard
-    res = lb.loc[
-                (lb['corr_rank'] <= top_n) &
-                (lb['mmc_rank'] <= top_n) &
-                (lb['fnc_rank'] <= top_n)][cols].copy()
-    return res
+    return lb.loc[
+        (lb['corr_rank'] <= top_n)
+        & (lb['mmc_rank'] <= top_n)
+        & (lb['fnc_rank'] <= top_n)
+    ][cols].copy()
 
 
 def payouts(models: List[str], groupby: str = "round") -> pd.DataFrame:
     """aggregated payouts for a list of models"""
     df = Data().details
     subset = df[df['model'].isin(models)].copy()
-    result = subset.groupby(groupby)['payout'].sum()
-    return result
+    return subset.groupby(groupby)['payout'].sum()
 
 
 def medals_leaderboard(limit: int = 10,

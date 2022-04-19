@@ -62,35 +62,34 @@ def napi(monkeypatch):
             return {"data": {"v2Leaderboard": items}}
 
         elif "v2UserProfile" in query:
-            if args['username'] in ['one', 'two', 'three', 'four', 'five']:
-                base = {
-                      "correlation": 0.023985807161517148,
-                      "correlationWithMetamodel": 0.5794202300023875,
-                      "date": "2021-02-24T00:00:00Z",
-                      "fnc": -0.005286782583341209,
-                      "leaderboardBonus": "0.000000000000000000",
-                      "mmc": 0.00846393867443868,
-                      "payoutPending": "0.086358895526745387",
-                      "roundNumber": 248,
-                      "selectedStakeValue": "2.661311924084651658"
-                    }
-
-                return {
-                  "data": {
-                    "v2UserProfile": {
-                      "accountId": "0145d36b-8204-4d16-8bc7-80611826b830",
-                      "id": "af64b78c-7cb0-4813-9357-fcf98a6ca042",
-                      "latestRoundPerformances": [base],
-                      "medals": {
-                        'gold': 1,
-                        'silver': 2,
-                        'bronze': 3
-                      }
-                      }
-                    }
-                  }
-            else:
+            if args['username'] not in ['one', 'two', 'three', 'four', 'five']:
                 return {"data": None}
+            base = {
+                  "correlation": 0.023985807161517148,
+                  "correlationWithMetamodel": 0.5794202300023875,
+                  "date": "2021-02-24T00:00:00Z",
+                  "fnc": -0.005286782583341209,
+                  "leaderboardBonus": "0.000000000000000000",
+                  "mmc": 0.00846393867443868,
+                  "payoutPending": "0.086358895526745387",
+                  "roundNumber": 248,
+                  "selectedStakeValue": "2.661311924084651658"
+                }
+
+            return {
+              "data": {
+                "v2UserProfile": {
+                  "accountId": "0145d36b-8204-4d16-8bc7-80611826b830",
+                  "id": "af64b78c-7cb0-4813-9357-fcf98a6ca042",
+                  "latestRoundPerformances": [base],
+                  "medals": {
+                    'gold': 1,
+                    'silver': 2,
+                    'bronze': 3
+                  }
+                  }
+                }
+              }
         else:
             raise "unpatched api call"
 
